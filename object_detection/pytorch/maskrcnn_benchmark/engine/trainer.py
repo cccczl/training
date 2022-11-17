@@ -43,7 +43,7 @@ def reduce_loss_dict(loss_dict):
             # only main process gets accumulated, so only divide by
             # world_size in this case
             all_losses /= world_size
-        reduced_losses = {k: v for k, v in zip(loss_names, all_losses)}
+        reduced_losses = dict(zip(loss_names, all_losses))
     return reduced_losses
 
 # Instead of zeroing, set parameter grads to None
@@ -90,11 +90,11 @@ def do_train(
 
         loss_dict = model(images, targets)
 
-        losses = sum(loss for loss in loss_dict.values())
+        losses = sum(loss_dict.values())
 
         # reduce losses over all GPUs for logging purposes
         loss_dict_reduced = reduce_loss_dict(loss_dict)
-        losses_reduced = sum(loss for loss in loss_dict_reduced.values())
+        losses_reduced = sum(loss_dict_reduced.values())
         meters.update(loss=losses_reduced, **loss_dict_reduced)
 
         losses.backward()
@@ -148,10 +148,4 @@ def do_train(
             total_time_str, total_training_time / (max_iter)
         )
     )
-    if per_iter_end_callback_fn is not None:
-        if early_exit:
-            return True
-        else:
-            return False
-    else:
-        return None
+    return bool(early_exit) if per_iter_end_callback_fn is not None else None

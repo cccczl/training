@@ -49,16 +49,15 @@ class Checkpointer(object):
         if not self.save_to_disk:
             return
 
-        data = {}
-        data["model"] = self.model.state_dict()
+        data = {"model": self.model.state_dict()}
         if self.optimizer is not None:
             data["optimizer"] = self.optimizer.state_dict()
         if self.scheduler is not None:
             data["scheduler"] = self.scheduler.state_dict()
-        data.update(kwargs)
+        data |= kwargs
 
-        save_file = os.path.join(self.save_dir, "{}.pth".format(name))
-        self.logger.info("Saving checkpoint to {}".format(save_file))
+        save_file = os.path.join(self.save_dir, f"{name}.pth")
+        self.logger.info(f"Saving checkpoint to {save_file}")
         torch.save(data, save_file)
         self.tag_last_checkpoint(save_file)
 
@@ -70,14 +69,14 @@ class Checkpointer(object):
             # no checkpoint could be found
             self.logger.info("No checkpoint found. Initializing model from scratch")
             return {}
-        self.logger.info("Loading checkpoint from {}".format(f))
+        self.logger.info(f"Loading checkpoint from {f}")
         checkpoint = self._load_file(f)
         self._load_model(checkpoint)
         if "optimizer" in checkpoint and self.optimizer:
-            self.logger.info("Loading optimizer from {}".format(f))
+            self.logger.info(f"Loading optimizer from {f}")
             self.optimizer.load_state_dict(checkpoint.pop("optimizer"))
         if "scheduler" in checkpoint and self.scheduler:
-            self.logger.info("Loading scheduler from {}".format(f))
+            self.logger.info(f"Loading scheduler from {f}")
             self.scheduler.load_state_dict(checkpoint.pop("scheduler"))
 
         # return any further checkpoint data
@@ -134,13 +133,13 @@ class DetectronCheckpointer(Checkpointer):
                 "maskrcnn_benchmark.config.paths_catalog", self.cfg.PATHS_CATALOG, True
             )
             catalog_f = paths_catalog.ModelCatalog.get(f[len("catalog://") :])
-            self.logger.info("{} points to {}".format(f, catalog_f))
+            self.logger.info(f"{f} points to {catalog_f}")
             f = catalog_f
         # download url files
         if f.startswith("http"):
             # if the file is a url path, download it and cache it
             cached_f = cache_url(f)
-            self.logger.info("url {} cached in {}".format(f, cached_f))
+            self.logger.info(f"url {f} cached in {cached_f}")
             f = cached_f
         # convert Caffe2 checkpoint from pkl
         if f.endswith(".pkl"):

@@ -56,7 +56,7 @@ def get_mg_path(model_run, model_num):
 
 def launch_ring_job(job_name, ctl_path, m1_path, m2_path, out_path, completions):
     # we also need $SERVICE_ACCOUNT to be set.
-    if not 'SERVICE_ACCOUNT' in os.environ:
+    if 'SERVICE_ACCOUNT' not in os.environ:
         print("$SERVICE_ACCOUNT should be set")
         raise ValueError
 
@@ -78,8 +78,7 @@ def launch_ring_job(job_name, ctl_path, m1_path, m2_path, out_path, completions)
     job_conf['spec']['parallelism'] = min(completions, 10)
 
     api = get_api()
-    resp = api.create_namespaced_job('default', body=job_conf)
-    return resp
+    return api.create_namespaced_job('default', body=job_conf)
 
 
 if __name__ == '__main__':

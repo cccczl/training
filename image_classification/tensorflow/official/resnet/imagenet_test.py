@@ -43,9 +43,7 @@ class BaseTest(tf.test.TestCase):
 
       # If a GPU is used for the test, the shape is returned (already in NCHW
       # form). When GPU is not used, the shape is converted to NHWC.
-      if with_gpu:
-        return shape
-      return shape[0], shape[2], shape[3], shape[1]
+      return shape if with_gpu else (shape[0], shape[2], shape[3], shape[1])
 
     graph = tf.Graph()
 

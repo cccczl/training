@@ -30,22 +30,22 @@ def parse_args():
 
 
 def generate_negatives(sampler, num_negatives, users):
-    result = []
-
     neg_users = np.repeat(users, num_negatives)
     num_batches = (neg_users.shape[0] // NEG_ELEMS_BATCH_SZ) + 1
     user_batches = np.array_split(neg_users, num_batches)
 
     neg_users_items = np.empty([num_negatives], object)
-    for i in range(num_batches):
-        result.append(sampler.sample_negatives(user_batches[i]))
+    result = [
+        sampler.sample_negatives(user_batches[i]) for i in range(num_batches)
+    ]
+
     result = np.array([neg_users, np.concatenate(result)])
     return result.transpose()
 
 
 def generate_negatives_flat(sampler, num_negatives, users):
     num_threads = int(0.8 * multiprocessing.cpu_count())
-    print(datetime.now(), "Generating negatives using {} threads.".format(num_threads))
+    print(datetime.now(), f"Generating negatives using {num_threads} threads.")
 
     users = np.tile(users, num_negatives)
     users_shape = users.shape
@@ -69,12 +69,16 @@ def process_raw_data(args):
     test_chunk_size = [0] * args.user_scaling
     for chunk in range(args.user_scaling):
         print(datetime.now(), "Loading data chunk {} of {}".format(chunk+1, args.user_scaling))
-        train_ratings[chunk] = np.load(args.data + '/trainx'
-                + str(args.user_scaling) + 'x' + str(args.item_scaling)
-                + '_' + str(chunk) + '.npz', encoding='bytes')['arr_0']
-        test_ratings_chunk[chunk] = np.load(args.data + '/testx'
-                + str(args.user_scaling) + 'x' + str(args.item_scaling)
-                + '_' + str(chunk) + '.npz', encoding='bytes')['arr_0']
+        train_ratings[chunk] = np.load(
+            f'{args.data}/trainx{str(args.user_scaling)}x{str(args.item_scaling)}_{str(chunk)}.npz',
+            encoding='bytes',
+        )['arr_0']
+
+        test_ratings_chunk[chunk] = np.load(
+            f'{args.data}/testx{str(args.user_scaling)}x{str(args.item_scaling)}_{str(chunk)}.npz',
+            encoding='bytes',
+        )['arr_0']
+
         test_chunk_size[chunk] = test_ratings_chunk[chunk].shape[0]
 
     # Due to the fractal graph expansion process, some generated users do not
@@ -86,7 +90,7 @@ def process_raw_data(args):
     nb_maxs_per_chunk = [np.max(x, axis=0)[1] for x in train_ratings]
     nb_items = max(nb_maxs_per_chunk) + 1 # Zero is valid item in output from expansion
 
-    nb_train_elems = sum([x.shape[0] for x in train_ratings])
+    nb_train_elems = sum(x.shape[0] for x in train_ratings)
 
     print(datetime.now(), "Number of users: {}, Number of items: {}".format(nb_users, nb_items))
     print(datetime.now(), "Number of ratings: {}".format(nb_train_elems))
@@ -109,8 +113,11 @@ def process_raw_data(args):
           sampler.region_starts.dtype, sampler.alias_index.dtype,
           sampler.alias_split_p.dtype))
 
-    fn_prefix = args.data + '/' + CACHE_FN.format(args.user_scaling, args.item_scaling)
-    sampler_cache = fn_prefix + "cached_sampler.pkl"
+    fn_prefix = (
+        f'{args.data}/{CACHE_FN.format(args.user_scaling, args.item_scaling)}'
+    )
+
+    sampler_cache = f"{fn_prefix}cached_sampler.pkl"
     with open(sampler_cache, "wb") as f:
         pickle.dump([sampler, pos_users, pos_items, nb_items, test_chunk_size], f, pickle.HIGHEST_PROTOCOL)
 
@@ -119,19 +126,20 @@ def process_raw_data(args):
 def main():
     args = parse_args()
     if args.seed is not None:
-      print("Using seed = {}".format(args.seed))
-      np.random.seed(seed=args.seed)
+        print(f"Using seed = {args.seed}")
+        np.random.seed(seed=args.seed)
 
     if not args.use_sampler_cache:
-      sampler, test_chunk_size = process_raw_data(args)
+        sampler, test_chunk_size = process_raw_data(args)
     else:
-      fn_prefix = args.data + '/' + CACHE_FN.format(args.user_scaling, args.item_scaling)
-      sampler_cache = fn_prefix + "cached_sampler.pkl"
-      print(datetime.now(), "Loading preprocessed sampler.")
-      if os.path.exists(args.data):
-        print("Using alias file: {}".format(args.data))
-        with open(sampler_cache, "rb") as f:
-          sampler, pos_users, pos_items, nb_items, test_chunk_size = pickle.load(f)
+        fn_prefix = f'{args.data}/{CACHE_FN.format(args.user_scaling, args.item_scaling)}'
+
+        sampler_cache = f"{fn_prefix}cached_sampler.pkl"
+        print(datetime.now(), "Loading preprocessed sampler.")
+        if os.path.exists(args.data):
+            print(f"Using alias file: {args.data}")
+            with open(sampler_cache, "rb") as f:
+              sampler, pos_users, pos_items, nb_items, test_chunk_size = pickle.load(f)
 
     print(datetime.now(), 'Generating negative test samples...')
     test_negatives = [np.array([], dtype=np.int64)] * args.user_scaling
@@ -143,14 +151,14 @@ def main():
                 sampler,
                 args.valid_negative,
                 neg_users)
-        file_name = (args.data + '/test_negx' + str(args.user_scaling) + 'x'
-                + str(args.item_scaling) + '_' + str(chunk) + '.npz')
+        file_name = f'{args.data}/test_negx{str(args.user_scaling)}x{str(args.item_scaling)}_{str(chunk)}.npz'
+
         np.savez_compressed(file_name, test_negatives[chunk])
 
         print(datetime.now(), 'Chunk', chunk+1, 'of', args.user_scaling, 'saved.')
         test_user_offset += test_chunk_size[chunk]
 
-    print(datetime.now(), "Number of test users: {}".format(test_user_offset))
+    print(datetime.now(), f"Number of test users: {test_user_offset}")
 
 
 if __name__ == '__main__':

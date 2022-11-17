@@ -105,11 +105,15 @@ def _parse_example_proto(example_serialized):
   }
   sparse_float32 = tf.VarLenFeature(dtype=tf.float32)
   # Sparse features in Example proto.
-  feature_map.update(
-      {k: sparse_float32 for k in ['image/object/bbox/xmin',
-                                   'image/object/bbox/ymin',
-                                   'image/object/bbox/xmax',
-                                   'image/object/bbox/ymax']})
+  feature_map |= {
+      k: sparse_float32
+      for k in [
+          'image/object/bbox/xmin',
+          'image/object/bbox/ymin',
+          'image/object/bbox/xmax',
+          'image/object/bbox/ymax',
+      ]
+  }
 
   features = tf.parse_single_example(example_serialized, feature_map)
   label = tf.cast(features['image/class/label'], dtype=tf.int32)
@@ -267,9 +271,7 @@ def _get_block_sizes(resnet_size):
   try:
     return choices[resnet_size]
   except KeyError:
-    err = ('Could not find layers for selected Resnet size.\n'
-           'Size received: {}; sizes allowed: {}.'.format(
-               resnet_size, choices.keys()))
+    err = f'Could not find layers for selected Resnet size.\nSize received: {resnet_size}; sizes allowed: {choices.keys()}.'
     raise ValueError(err)
 
 
@@ -278,11 +280,7 @@ def imagenet_model_fn(features, labels, mode, params):
 
   # Warmup and higher lr may not be valid for fine tuning with small batches
   # and smaller numbers of training images.
-  if params['fine_tune']:
-    base_lr = .1
-  else:
-    base_lr = .128
-
+  base_lr = .1 if params['fine_tune'] else .128
   learning_rate_fn = resnet_run_loop.learning_rate_with_decay(
       batch_size=params['batch_size'], batch_denom=256,
       num_images=_NUM_IMAGES['train'], boundary_epochs=[30, 60, 80, 90],

@@ -83,7 +83,7 @@ def main(argv):
 
     if not tf_records:
         print("Validation paths:", validation_paths)
-        print(["{}:\n\t{}".format(p, os.listdir(p)) for p in validation_paths])
+        print([f"{p}:\n\t{os.listdir(p)}" for p in validation_paths])
         raise RuntimeError("Did not find any holdout files for validating!")
     validate(*tf_records)
 

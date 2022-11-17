@@ -78,8 +78,9 @@ def config_benchmark_logger(flag_obj=None):
           bigquery_metric_table=flag_obj.bigquery_metric_table,
           run_id=str(uuid.uuid4()))
     else:
-      raise ValueError("Unrecognized benchmark_logger_type: %s"
-                       % flag_obj.benchmark_logger_type)
+      raise ValueError(
+          f"Unrecognized benchmark_logger_type: {flag_obj.benchmark_logger_type}"
+      )
 
   finally:
     _logger_lock.release()
@@ -142,8 +143,7 @@ class BaseBenchmarkLogger(object):
       global_step: int, the global_step when the metric is logged.
       extras: map of string:string, the extra information about the metric.
     """
-    metric = _process_metric_to_json(name, value, unit, global_step, extras)
-    if metric:
+    if metric := _process_metric_to_json(name, value, unit, global_step, extras):
       tf.compat.v1.logging.info("Benchmark metric: %s", metric)
 
   def log_run_info(self, model_name, dataset_name, run_params, test_id=None):
@@ -180,8 +180,7 @@ class BenchmarkFileLogger(BaseBenchmarkLogger):
       global_step: int, the global_step when the metric is logged.
       extras: map of string:string, the extra information about the metric.
     """
-    metric = _process_metric_to_json(name, value, unit, global_step, extras)
-    if metric:
+    if metric := _process_metric_to_json(name, value, unit, global_step, extras):
       try:
         json.dump(metric, self._metric_file_handler)
         self._metric_file_handler.write("\n")
@@ -249,8 +248,7 @@ class BenchmarkBigQueryLogger(BaseBenchmarkLogger):
       global_step: int, the global_step when the metric is logged.
       extras: map of string:string, the extra information about the metric.
     """
-    metric = _process_metric_to_json(name, value, unit, global_step, extras)
-    if metric:
+    if metric := _process_metric_to_json(name, value, unit, global_step, extras):
       # Starting new thread for bigquery upload in case it might take long time
       # and impact the benchmark and performance measurement. Starting a new
       # thread might have potential performance impact for model that run on
@@ -368,9 +366,7 @@ def _collect_tensorflow_environment_variables(run_info):
 # which is not exposed for import.
 def _collect_cpu_info(run_info):
   """Collect the CPU information for the local environment."""
-  cpu_info = {}
-
-  cpu_info["num_cores"] = multiprocessing.cpu_count()
+  cpu_info = {"num_cores": multiprocessing.cpu_count()}
 
   try:
     # Note: cpuinfo is not installed in the TensorFlow OSS tree.

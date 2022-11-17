@@ -84,19 +84,25 @@ flags.register_multi_flags_validator(
     ['num_examples', 'steps_to_train', 'filter_amount'],
     '`num_examples` requires `steps_to_train==0` and `filter_amount==1.0`')
 def _example_flags_validator(flags_dict):
-    if not flags_dict['num_examples']:
-        return True
-    return not flags_dict['steps_to_train'] and flags_dict['filter_amount'] == 1.0
+    return (
+        not flags_dict['steps_to_train'] and flags_dict['filter_amount'] == 1.0
+        if flags_dict['num_examples']
+        else True
+    )
 
 @flags.multi_flags_validator(
     ['use_bt', 'cbt_project', 'cbt_instance', 'cbt_table'],
     message='Cloud Bigtable configuration flags not correct')
 def _bt_checker(flags_dict):
-    if not flags_dict['use_bt']:
-        return True
-    return (flags_dict['cbt_project']
+    return (
+        (
+            flags_dict['cbt_project']
             and flags_dict['cbt_instance']
-            and flags_dict['cbt_table'])
+            and flags_dict['cbt_table']
+        )
+        if flags_dict['use_bt']
+        else True
+    )
 
 
 # From dual_net.py
@@ -184,7 +190,11 @@ def train(*tf_records: "Records to train on"):
                 games = bigtable_input.GameQueue(
                     FLAGS.cbt_project, FLAGS.cbt_instance, FLAGS.cbt_table)
                 games_nr = bigtable_input.GameQueue(
-                    FLAGS.cbt_project, FLAGS.cbt_instance, FLAGS.cbt_table + '-nr')
+                    FLAGS.cbt_project,
+                    FLAGS.cbt_instance,
+                    f'{FLAGS.cbt_table}-nr',
+                )
+
                 return preprocessing.get_tpu_bt_input_tensors(
                     games,
                     games_nr,
@@ -192,6 +202,7 @@ def train(*tf_records: "Records to train on"):
                     params['input_layout'],
                     number_of_games=FLAGS.window_size,
                     random_rotation=True)
+
         else:
             def _input_fn(params):
                 return preprocessing.get_tpu_input_tensors(

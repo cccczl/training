@@ -24,8 +24,7 @@ from maskrcnn_benchmark.structures.boxlist_ops import boxlist_iou
 
 def remove_dup(l):
     seen = set()
-    seen_add = seen.add
-    return [x for x in l if not (x in seen or seen_add(x))]
+    return [x for x in l if x not in seen and not seen.add(x)]
 
 def do_coco_evaluation(
     dataset,
@@ -72,7 +71,7 @@ def do_coco_evaluation(
         with tempfile.NamedTemporaryFile() as f:
             file_path = f.name
             if output_folder:
-                file_path = os.path.join(output_folder, iou_type + ".json")
+                file_path = os.path.join(output_folder, f"{iou_type}.json")
             res = evaluate_predictions_on_coco(
                 dataset.coco, coco_results[iou_type], file_path, iou_type
             )
@@ -232,7 +231,7 @@ def evaluate_box_proposals(
         [256 ** 2, 512 ** 2],  # 256-512
         [512 ** 2, 1e5 ** 2],
     ]  # 512-inf
-    assert area in areas, "Unknown area range: {}".format(area)
+    assert area in areas, f"Unknown area range: {area}"
     area_range = area_ranges[areas[area]]
     gt_overlaps = []
     num_pos = 0
@@ -397,14 +396,14 @@ def check_expected_results(results, expected_results, sigma_tol):
         actual_val = results.results[task][metric]
         lo = mean - sigma_tol * std
         hi = mean + sigma_tol * std
-        ok = (lo < actual_val) and (actual_val < hi)
+        ok = lo < actual_val < hi
         msg = (
             "{} > {} sanity check (actual vs. expected): "
             "{:.3f} vs. mean={:.4f}, std={:.4}, range=({:.4f}, {:.4f})"
         ).format(task, metric, actual_val, mean, std, lo, hi)
         if not ok:
-            msg = "FAIL: " + msg
+            msg = f"FAIL: {msg}"
             logger.error(msg)
         else:
-            msg = "PASS: " + msg
+            msg = f"PASS: {msg}"
             logger.info(msg)

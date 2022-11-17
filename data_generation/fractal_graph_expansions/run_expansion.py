@@ -173,10 +173,8 @@ def main(_):
   train_test_ratings_matrix = train_test_ratings_matrix.tocoo()
   logging.info("Done creating signed train/test matrix.")
 
-  output_train_file = (FLAGS.output_prefix + "trainx" + 
-      str(reduced_num_rows) + "x" + str(reduced_num_cols))
-  output_test_file = (FLAGS.output_prefix + "testx" +
-      str(reduced_num_rows) + "x" + str(reduced_num_cols))
+  output_train_file = f"{FLAGS.output_prefix}trainx{str(reduced_num_rows)}x{str(reduced_num_cols)}"
+  output_test_file = f"{FLAGS.output_prefix}testx{str(reduced_num_rows)}x{str(reduced_num_cols)}"
   output_train_file_metadata = None
   output_test_file_metadata = None
 

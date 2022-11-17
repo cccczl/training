@@ -30,15 +30,11 @@ def get_group_gn(dim, dim_per_gp, num_groups):
         "GroupNorm: can only specify G or C/G."
 
     if dim_per_gp > 0:
-        assert dim % dim_per_gp == 0, \
-            "dim: {}, dim_per_gp: {}".format(dim, dim_per_gp)
-        group_gn = dim // dim_per_gp
+        assert dim % dim_per_gp == 0, f"dim: {dim}, dim_per_gp: {dim_per_gp}"
+        return dim // dim_per_gp
     else:
-        assert dim % num_groups == 0, \
-            "dim: {}, num_groups: {}".format(dim, num_groups)
-        group_gn = num_groups
-
-    return group_gn
+        assert dim % num_groups == 0, f"dim: {dim}, num_groups: {num_groups}"
+        return num_groups
 
 
 def group_norm(out_channels, affine=True, divisor=1):
@@ -64,14 +60,15 @@ def make_conv3x3(
     kaiming_init=True
 ):
     conv = Conv2d(
-        in_channels, 
-        out_channels, 
-        kernel_size=3, 
-        stride=stride, 
-        padding=dilation, 
-        dilation=dilation, 
-        bias=False if use_gn else True
+        in_channels,
+        out_channels,
+        kernel_size=3,
+        stride=stride,
+        padding=dilation,
+        dilation=dilation,
+        bias=not use_gn,
     )
+
     if kaiming_init:
         nn.init.kaiming_normal_(
             conv.weight, mode="fan_out", nonlinearity="relu"
@@ -85,9 +82,7 @@ def make_conv3x3(
         module.append(group_norm(out_channels))
     if use_relu:
         module.append(nn.ReLU(inplace=True))
-    if len(module) > 1:
-        return nn.Sequential(*module)
-    return conv
+    return nn.Sequential(*module) if len(module) > 1 else conv
 
 
 def make_fc(dim_in, hidden_dim, use_gn=False):
@@ -107,17 +102,18 @@ def make_fc(dim_in, hidden_dim, use_gn=False):
 
 def conv_with_kaiming_uniform(use_gn=False, use_relu=False):
     def make_conv(
-        in_channels, out_channels, kernel_size, stride=1, dilation=1
-    ):
+            in_channels, out_channels, kernel_size, stride=1, dilation=1
+        ):
         conv = Conv2d(
-            in_channels, 
-            out_channels, 
-            kernel_size=kernel_size, 
-            stride=stride, 
-            padding=dilation * (kernel_size - 1) // 2, 
-            dilation=dilation, 
-            bias=False if use_gn else True
+            in_channels,
+            out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=dilation * (kernel_size - 1) // 2,
+            dilation=dilation,
+            bias=not use_gn,
         )
+
         # Caffe2 implementation uses XavierFill, which in fact
         # corresponds to kaiming_uniform_ in PyTorch
         nn.init.kaiming_uniform_(conv.weight, a=1)
@@ -128,8 +124,6 @@ def conv_with_kaiming_uniform(use_gn=False, use_relu=False):
             module.append(group_norm(out_channels))
         if use_relu:
             module.append(nn.ReLU(inplace=True))
-        if len(module) > 1:
-            return nn.Sequential(*module)
-        return conv
+        return nn.Sequential(*module) if len(module) > 1 else conv
 
     return make_conv

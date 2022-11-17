@@ -77,38 +77,39 @@ def convert_coco_stuff_mat(data_dir, out_dir):
         with open(file_list % data_set) as f:
             for img_id, img_name in enumerate(f):
                 img_name = img_name.replace('coco', 'COCO').strip('\n')
-                image = {}
-                mat_file = os.path.join(
-                    data_dir, 'annotations/%s.mat' % img_name)
+                mat_file = os.path.join(data_dir, f'annotations/{img_name}.mat')
                 data = h5py.File(mat_file, 'r')
                 labelMap = data.get('S')
-                if len(categories) == 0:
+                if not categories:
                     labelNames = data.get('names')
-                    for idx, n in enumerate(labelNames):
-                        categories.append(
-                            {"id": idx, "name": ''.join(chr(i) for i in data[
-                                n[0]])})
+                    categories.extend(
+                        {
+                            "id": idx,
+                            "name": ''.join(chr(i) for i in data[n[0]]),
+                        }
+                        for idx, n in enumerate(labelNames)
+                    )
+
                     ann_dict['categories'] = categories
-                scipy.misc.imsave(
-                    os.path.join(data_dir, img_name + '.png'), labelMap)
-                image['width'] = labelMap.shape[0]
-                image['height'] = labelMap.shape[1]
-                image['file_name'] = img_name
-                image['seg_file_name'] = img_name
-                image['id'] = img_id
+                scipy.misc.imsave(os.path.join(data_dir, f'{img_name}.png'), labelMap)
+                image = {
+                    'width': labelMap.shape[0],
+                    'height': labelMap.shape[1],
+                    'file_name': img_name,
+                    'seg_file_name': img_name,
+                    'id': img_id,
+                }
+
                 images.append(image)
         ann_dict['images'] = images
-        print("Num images: %s" % len(images))
+        print(f"Num images: {len(images)}")
         with open(os.path.join(out_dir, json_name % data_set), 'wb') as outfile:
             outfile.write(json.dumps(ann_dict))
 
 
 # for Cityscapes
 def getLabelID(self, instID):
-    if (instID < 1000):
-        return instID
-    else:
-        return int(instID / 1000)
+    return instID if (instID < 1000) else int(instID / 1000)
 
 
 def convert_cityscapes_instance_only(
@@ -151,8 +152,7 @@ def convert_cityscapes_instance_only(
     ]
 
     for data_set, ann_dir in zip(sets, ann_dirs):
-        print('Starting %s' % data_set)
-        ann_dict = {}
+        print(f'Starting {data_set}')
         images = []
         annotations = []
         ann_dir = os.path.join(data_dir, ann_dir)
@@ -160,20 +160,20 @@ def convert_cityscapes_instance_only(
             for filename in files:
                 if filename.endswith(ends_in % data_set.split('_')[0]):
                     if len(images) % 50 == 0:
-                        print("Processed %s images, %s annotations" % (
-                            len(images), len(annotations)))
+                        print(f"Processed {len(images)} images, {len(annotations)} annotations")
                     json_ann = json.load(open(os.path.join(root, filename)))
-                    image = {}
-                    image['id'] = img_id
+                    image = {'id': img_id}
                     img_id += 1
 
                     image['width'] = json_ann['imgWidth']
                     image['height'] = json_ann['imgHeight']
                     image['file_name'] = filename[:-len(
                         ends_in % data_set.split('_')[0])] + 'leftImg8bit.png'
-                    image['seg_file_name'] = filename[:-len(
-                        ends_in % data_set.split('_')[0])] + \
-                        '%s_instanceIds.png' % data_set.split('_')[0]
+                    image['seg_file_name'] = (
+                        filename[: -len(ends_in % data_set.split('_')[0])]
+                        + f"{data_set.split('_')[0]}_instanceIds.png"
+                    )
+
                     images.append(image)
 
                     fullname = os.path.join(root, image['seg_file_name'])
@@ -194,8 +194,7 @@ def convert_cityscapes_instance_only(
                                 print('Warning: invalid contours.')
                                 continue  # skip non-instance categories
 
-                            ann = {}
-                            ann['id'] = ann_id
+                            ann = {'id': ann_id}
                             ann_id += 1
                             ann['image_id'] = image['id']
                             ann['segmentation'] = obj['contours']
@@ -212,14 +211,14 @@ def convert_cityscapes_instance_only(
 
                             annotations.append(ann)
 
-        ann_dict['images'] = images
+        ann_dict = {'images': images}
         categories = [{"id": category_dict[name], "name": name} for name in
                       category_dict]
         ann_dict['categories'] = categories
         ann_dict['annotations'] = annotations
-        print("Num categories: %s" % len(categories))
-        print("Num images: %s" % len(images))
-        print("Num annotations: %s" % len(annotations))
+        print(f"Num categories: {len(categories)}")
+        print(f"Num images: {len(images)}")
+        print(f"Num annotations: {len(annotations)}")
         with open(os.path.join(out_dir, json_name % data_set), 'w') as outfile:
             outfile.write(json.dumps(ann_dict))
 
@@ -231,4 +230,4 @@ if __name__ == '__main__':
     elif args.dataset == "cocostuff":
         convert_coco_stuff_mat(args.datadir, args.outdir)
     else:
-        print("Dataset not supported: %s" % args.dataset)
+        print(f"Dataset not supported: {args.dataset}")

@@ -61,7 +61,7 @@ class Preprocessor:
         for case in sorted([f for f in os.listdir(self.data_dir) if "case" in f]):
             case_id = int(case.split("_")[1])
             if case_id in EXCLUDED_CASES or case_id >= MAX_ID:
-                print("Case {}. Skipped.".format(case_id))
+                print(f"Case {case_id}. Skipped.")
                 continue
             image, label, image_spacings = self.load_pair(case)
             image, label = self.preprocess_case(image, label, image_spacings)
@@ -78,8 +78,11 @@ class Preprocessor:
     def pad_to_min_shape(image, label):
         current_shape = image.shape[1:]
         bounds = [max(0, TARGET_SHAPE[i] - current_shape[i]) for i in range(3)]
-        paddings = [(0, 0)]
-        paddings.extend([(bounds[i] // 2, bounds[i] - bounds[i] // 2) for i in range(3)])
+        paddings = [
+            (0, 0),
+            *[(bounds[i] // 2, bounds[i] - bounds[i] // 2) for i in range(3)],
+        ]
+
         return np.pad(image, paddings, mode="edge"), np.pad(label, paddings, mode="edge")
 
     def load_pair(self, case: str):

@@ -29,7 +29,7 @@ def _get_shape(input_tensor):
 
 
 def _in_out_shape(input_tensor, output_tensor):
-  return "{} -> {}".format( _get_shape(input_tensor), _get_shape(output_tensor))
+  return f"{_get_shape(input_tensor)} -> {_get_shape(output_tensor)}"
 
 
 def log_max_pool(input_tensor, output_tensor):
@@ -45,15 +45,17 @@ def log_begin_block(input_tensor, block_type):
                           stack_offset=_STACK_OFFSET)
   mlperf_log.resnet_print(
       key=mlperf_log.MODEL_HP_RESNET_TOPOLOGY,
-      value=" Block Input: {}".format(_get_shape(input_tensor)),
-      stack_offset=_STACK_OFFSET)
+      value=f" Block Input: {_get_shape(input_tensor)}",
+      stack_offset=_STACK_OFFSET,
+  )
 
 
 def log_end_block(output_tensor):
   mlperf_log.resnet_print(
       key=mlperf_log.MODEL_HP_END_BLOCK,
-      value=" Block Output: {}".format(_get_shape(output_tensor)),
-      stack_offset=_STACK_OFFSET)
+      value=f" Block Output: {_get_shape(output_tensor)}",
+      stack_offset=_STACK_OFFSET,
+  )
 
 
 def log_projection(input_tensor, output_tensor):

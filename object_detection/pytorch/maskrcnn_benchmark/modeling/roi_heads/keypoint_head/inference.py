@@ -134,5 +134,4 @@ class Keypointer(object):
 
 def make_roi_keypoint_post_processor(cfg):
     keypointer = Keypointer()
-    keypoint_post_processor = KeypointPostProcessor(keypointer)
-    return keypoint_post_processor
+    return KeypointPostProcessor(keypointer)

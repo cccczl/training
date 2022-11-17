@@ -49,8 +49,8 @@ def past_stop_threshold(stop_threshold, eval_metric):
 
   if eval_metric >= stop_threshold:
     tf.compat.v1.logging.info(
-        "Stop threshold of {} was passed with metric value {}.".format(
-            stop_threshold, eval_metric))
+        f"Stop threshold of {stop_threshold} was passed with metric value {eval_metric}."
+    )
     return True
 
   return False
@@ -88,6 +88,7 @@ def generate_synthetic_data(
 
 def apply_clean(flags_obj):
   if flags_obj.clean and tf.io.gfile.exists(flags_obj.model_dir):
-    tf.compat.v1.logging.info("--clean flag set. Removing existing model dir:"
-                              " {}".format(flags_obj.model_dir))
+    tf.compat.v1.logging.info(
+        f"--clean flag set. Removing existing model dir: {flags_obj.model_dir}"
+    )
     tf.io.gfile.rmtree(flags_obj.model_dir)

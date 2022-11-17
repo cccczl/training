@@ -212,10 +212,7 @@ def learning_rate_with_decay(
     return tf.where(global_step <= w_steps, wrate, poly_rate)
 
   # For LARS we have a new learning rate schedule
-  if enable_lars:
-    return poly_rate_fn
-
-  return learning_rate_fn
+  return poly_rate_fn if enable_lars else learning_rate_fn
 
 
 def resnet_model_fn(features, labels, mode, model_class,
@@ -423,12 +420,8 @@ def per_device_batch_size(batch_size, num_gpus):
   if num_gpus <= 1:
     return batch_size
 
-  remainder = batch_size % num_gpus
-  if remainder:
-    err = ('When running with multiple GPUs, batch size '
-           'must be a multiple of the number of available GPUs. Found {} '
-           'GPUs with a batch size of {}; try --batch_size={} instead.'
-          ).format(num_gpus, batch_size, batch_size - remainder)
+  if remainder := batch_size % num_gpus:
+    err = f'When running with multiple GPUs, batch size must be a multiple of the number of available GPUs. Found {num_gpus} GPUs with a batch size of {batch_size}; try --batch_size={batch_size - remainder} instead.'
     raise ValueError(err)
   return int(batch_size / num_gpus)
 

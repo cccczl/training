@@ -22,8 +22,7 @@ c.NotebookApp.open_browser = False
 
 # sets a password if PASSWORD is set in the environment
 if 'PASSWORD' in os.environ:
-  password = os.environ['PASSWORD']
-  if password:
+  if password := os.environ['PASSWORD']:
     c.NotebookApp.password = passwd(password)
   else:
     c.NotebookApp.password = ''

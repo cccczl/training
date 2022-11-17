@@ -14,6 +14,7 @@
 
 """Utilities for the reinforcement trainer."""
 
+
 import sys
 sys.path.insert(0, '.')  # nopep8
 
@@ -30,7 +31,7 @@ from utils import *
 # Flags that take multiple values.
 # For these flags, expand_cmd_str appends each value in order.
 # For all other flags, expand_cmd_str takes the last value.
-MULTI_VALUE_FLAGS = set(['--lr_boundaries', '--lr_rates'])
+MULTI_VALUE_FLAGS = {'--lr_boundaries', '--lr_rates'}
 
 
 flag_cache = {}
@@ -38,7 +39,7 @@ flag_cache_lock = asyncio.Lock()
 
 
 def is_python_cmd(cmd):
-    return cmd[0] == 'python' or cmd[0] == 'python3'
+    return cmd[0] in ['python', 'python3']
 
 
 def get_cmd_name(cmd):
@@ -82,10 +83,9 @@ async def expand_cmd_str(cmd):
         if value is None:
             flag_list.append(flag)
         elif type(value) == list:
-            for v in value:
-                flag_list.append('%s=%s' % (flag, v))
+            flag_list.extend(f'{flag}={v}' for v in value)
         else:
-            flag_list.append('%s=%s' % (flag, value))
+            flag_list.append(f'{flag}={value}')
 
     flag_list = sorted(mask_flags.filter_flags(flag_list, valid_flags))
     return '  '.join(process + flag_list + position_args)
@@ -112,22 +112,21 @@ def list_selfplay_dirs(base_dir):
 def copy_tree(src, dst, verbose=False):
     """Copies everything under src to dst."""
 
-    print('Copying {} to {}'.format(src, dst))
+    print(f'Copying {src} to {dst}')
     for src_dir, sub_dirs, basenames in tf.io.gfile.walk(src):
         rel_dir = os.path.relpath(src_dir, src)
         dst_dir = os.path.join(dst, rel_dir)
         for sub_dir in sorted(sub_dirs):
             path = os.path.join(dst, rel_dir, sub_dir)
-            print('Make dir {}'.format(path))
+            print(f'Make dir {path}')
             tf.io.gfile.makedirs(path)
         if basenames:
-            print('Copying {} files from {} to {}'.format(
-                len(basenames), src_dir, dst_dir))
+            print(f'Copying {len(basenames)} files from {src_dir} to {dst_dir}')
             for basename in basenames:
                 src_path = os.path.join(src_dir, basename)
                 dst_path = os.path.join(dst_dir, basename)
                 if verbose:
-                    print('Copying {} to {}'.format(src_path, dst_path))
+                    print(f'Copying {src_path} to {dst_path}')
                 tf.io.gfile.copy(src_path, dst_path)
 
 
@@ -147,7 +146,7 @@ async def checked_run(cmd, env=None):
 
     # Start the subprocess.
     logging.info('Running: %s', await expand_cmd_str(cmd))
-    with logged_timer('{} finished'.format(get_cmd_name(cmd))):
+    with logged_timer(f'{get_cmd_name(cmd)} finished'):
         p = await asyncio.create_subprocess_exec(
             *cmd, env=env,
             stdout=asyncio.subprocess.PIPE,
@@ -167,8 +166,10 @@ async def checked_run(cmd, env=None):
         await p.wait()
         output = '\n'.join(lines)[:-1]
         if p.returncode:
-            raise RuntimeError('Return code {} from process: {}\n{}'.format(
-                p.returncode, await expand_cmd_str(cmd), output))
+            raise RuntimeError(
+                f'Return code {p.returncode} from process: {await expand_cmd_str(cmd)}\n{output}'
+            )
+
 
         return output
 

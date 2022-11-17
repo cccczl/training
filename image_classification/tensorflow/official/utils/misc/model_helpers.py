@@ -48,8 +48,8 @@ def past_stop_threshold(stop_threshold, eval_metric):
 
   if eval_metric >= stop_threshold:
     tf.logging.info(
-        "Stop threshold of {} was passed with metric value {}.".format(
-            stop_threshold, eval_metric))
+        f"Stop threshold of {stop_threshold} was passed with metric value {eval_metric}."
+    )
     return True
 
   return False

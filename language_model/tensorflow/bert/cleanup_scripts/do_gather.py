@@ -67,9 +67,9 @@ def worker_fn(x):
       total_size = 0
     if not out_file:
       out_path = os.path.join(
-          out_dir, 'part-{}-of-{}'.format(
-              str(count + 1000 * worker_id).zfill(5),
-              str(args.num_outputs).zfill(5)))
+          out_dir,
+          f'part-{str(count + 1000 * worker_id).zfill(5)}-of-{str(args.num_outputs).zfill(5)}',
+      )
       out_file = io.open(out_path, 'w', encoding='utf-8')
     total_size += curr_size
     content = in_file.read()
@@ -81,11 +81,9 @@ def worker_fn(x):
 if __name__ == '__main__':
   p = multiprocessing.Pool(num_workers)
 
-  # calculate the number of splits
-  file_splits = []
   split_size = (len(input_files) + num_workers - 1) // num_workers
-  for i in range(num_workers - 1):
-    file_splits.append((input_files[i * split_size:(i + 1) * split_size], i))
+  file_splits = [(input_files[i * split_size:(i + 1) * split_size], i)
+                 for i in range(num_workers - 1)]
   file_splits.append(
       (input_files[(num_workers - 1) * split_size:], num_workers - 1))
 

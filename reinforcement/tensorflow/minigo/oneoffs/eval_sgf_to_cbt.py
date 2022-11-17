@@ -66,10 +66,8 @@ EVAL_COUNT_FILTER = row_filters.ColumnRangeFilter(
 
 def grouper(iterable, n):
     iterator = iter(iterable)
-    group = tuple(itertools.islice(iterator, n))
-    while group:
+    while group := tuple(itertools.islice(iterator, n)):
         yield group
-        group = tuple(itertools.islice(iterator, n))
 
 
 def latest_game_number(bt_table):
@@ -90,8 +88,7 @@ def read_existing_paths(bt_table):
         filter_=row_filters.ColumnRangeFilter(
             METADATA, SGF_FILENAME, SGF_FILENAME))
     names = (row.cell_value(METADATA, SGF_FILENAME).decode() for row in rows)
-    processed = [os.path.splitext(os.path.basename(r))[0] for r in names]
-    return processed
+    return [os.path.splitext(os.path.basename(r))[0] for r in names]
 
 
 def canonical_name(sgf_name):
@@ -101,11 +98,8 @@ def canonical_name(sgf_name):
     # Strip off '.sgf'
     sgf_name = sgf_name[:-4]
 
-    # Often eval is inside a folder with the run name.
-    # include from folder before /eval/ if part of path.
-    with_folder = re.search(r'/([^/]*/eval/.*)', sgf_name)
-    if with_folder:
-        return with_folder.group(1)
+    if with_folder := re.search(r'/([^/]*/eval/.*)', sgf_name):
+        return with_folder[1]
 
     # Return the filename
     return os.path.basename(sgf_name)
@@ -171,8 +165,7 @@ def read_games(glob, existing_paths):
     with multiprocessing.Pool() as pool:
         game_data = pool.map(process_game, tqdm(to_parse), 100)
 
-    print("Read {} SGFs, {} new, {} existing".format(
-        len(globbed), len(game_data), skipped))
+    print(f"Read {len(globbed)} SGFs, {len(game_data)} new, {skipped} existing")
     return game_data
 
 
@@ -225,7 +218,7 @@ def write_eval_records(bt_table, game_data, last_game):
         any_bad = False
         for i, status in enumerate(response):
             if status.code is not 0:
-                print("Row number {} failed to write {}".format(i, status))
+                print(f"Row number {i} failed to write {status}")
                 any_bad = True
         if any_bad:
             break
@@ -250,7 +243,7 @@ def main(unusedargv):
 
     # Get existing SGF paths so we avoid uploading duplicates
     existing_paths = read_existing_paths(bt_table)
-    print("Found {} existing".format(len(existing_paths)))
+    print(f"Found {len(existing_paths)} existing")
     if existing_paths:
         duplicates = Counter(existing_paths)
         existing_paths = set(existing_paths)
@@ -258,15 +251,13 @@ def main(unusedargv):
         for k, v in duplicates.most_common():
             if v == 1:
                 break
-            print("{}x{}".format(v, k))
+            print(f"{v}x{k}")
 
         print("\tmin:", min(existing_paths))
         print("\tmax:", max(existing_paths))
         print()
 
-    # Get all SGFs that match glob, skipping SGFs with existing records.
-    data = read_games(FLAGS.sgf_glob, existing_paths)
-    if data:
+    if data := read_games(FLAGS.sgf_glob, existing_paths):
         write_eval_records(bt_table, data, last_game)
 
 

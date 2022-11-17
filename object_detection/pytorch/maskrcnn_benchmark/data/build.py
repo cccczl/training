@@ -39,8 +39,9 @@ def build_dataset(dataset_list, transforms, dataset_catalog, is_train=True):
     """
     if not isinstance(dataset_list, (list, tuple)):
         raise RuntimeError(
-            "dataset_list should be a list of strings, got {}".format(dataset_list)
+            f"dataset_list should be a list of strings, got {dataset_list}"
         )
+
     datasets = []
     total_datasets_size = 0
     for dataset_name in dataset_list:
@@ -63,11 +64,7 @@ def build_dataset(dataset_list, transforms, dataset_catalog, is_train=True):
     if not is_train:
         return datasets, total_datasets_size
 
-    # for training, concatenate all datasets into a single one
-    dataset = datasets[0]
-    if len(datasets) > 1:
-        dataset = D.ConcatDataset(datasets)
-
+    dataset = D.ConcatDataset(datasets) if len(datasets) > 1 else datasets[0]
     return [dataset], total_datasets_size
 
 
@@ -84,8 +81,7 @@ def make_data_sampler(dataset, shuffle, distributed):
 def _quantize(x, bins):
     bins = copy.copy(bins)
     bins = sorted(bins)
-    quantized = list(map(lambda y: bisect.bisect_right(bins, y), x))
-    return quantized
+    return list(map(lambda y: bisect.bisect_right(bins, y), x))
 
 
 def _compute_aspect_ratios(dataset):
@@ -126,7 +122,7 @@ def make_data_loader(cfg, is_train=True, is_distributed=False, start_iter=0, ran
         assert (
             images_per_batch % num_gpus == 0
         ), "SOLVER.IMS_PER_BATCH ({}) must be divisible by the number "
-        "of GPUs ({}) used.".format(images_per_batch, num_gpus)
+        f"of GPUs ({images_per_batch}) used."
         images_per_gpu = images_per_batch // num_gpus
         shuffle = True
         num_iters = cfg.SOLVER.MAX_ITER
@@ -135,9 +131,9 @@ def make_data_loader(cfg, is_train=True, is_distributed=False, start_iter=0, ran
         assert (
             images_per_batch % num_gpus == 0
         ), "TEST.IMS_PER_BATCH ({}) must be divisible by the number "
-        "of GPUs ({}) used.".format(images_per_batch, num_gpus)
+        f"of GPUs ({images_per_batch}) used."
         images_per_gpu = images_per_batch // num_gpus
-        shuffle = False if not is_distributed else True
+        shuffle = bool(is_distributed)
         num_iters = None
         start_iter = 0
 

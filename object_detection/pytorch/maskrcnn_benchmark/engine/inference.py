@@ -30,15 +30,13 @@ def compute_on_dataset(model, data_loader, device):
     model.eval()
     results_dict = {}
     cpu_device = torch.device("cpu")
-    for i, batch in enumerate(tqdm(data_loader)):
+    for batch in tqdm(data_loader):
         images, targets, image_ids = batch
         images = images.to(device)
         with torch.no_grad():
             output = model(images)
             output = [o.to(cpu_device) for o in output]
-        results_dict.update(
-            {img_id: result for img_id, result in zip(image_ids, output)}
-        )
+        results_dict |= dict(zip(image_ids, output))
     return results_dict
 
 
@@ -49,7 +47,7 @@ def _accumulate_predictions_from_multiple_gpus(predictions_per_gpu):
     # merge the list of dicts
     predictions = {}
     for p in all_predictions:
-        predictions.update(p)
+        predictions |= p
     # convert a dict where the key is the index in a list
     image_ids = list(sorted(predictions.keys()))
     if len(image_ids) != image_ids[-1] + 1:
@@ -84,7 +82,10 @@ def inference(
     )
     logger = logging.getLogger("maskrcnn_benchmark.inference")
     dataset = data_loader.dataset
-    logger.info("Start evaluation on {} dataset({} images).".format(dataset_name, len(dataset)))
+    logger.info(
+        f"Start evaluation on {dataset_name} dataset({len(dataset)} images)."
+    )
+
     start_time = time.time()
     predictions = compute_on_dataset(model, data_loader, device)
     # wait for all processes to complete before measuring the time
@@ -92,10 +93,9 @@ def inference(
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=total_time))
     logger.info(
-        "Total inference time: {} ({} s / img per device, on {} devices)".format(
-            total_time_str, total_time * num_devices / len(dataset), num_devices
-        )
+        f"Total inference time: {total_time_str} ({total_time * num_devices / len(dataset)} s / img per device, on {num_devices} devices)"
     )
+
 
     predictions = _accumulate_predictions_from_multiple_gpus(predictions)
     if not is_main_process():

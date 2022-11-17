@@ -19,7 +19,7 @@ def encrypt_file(public_key, src_file, dest_file):
       cipher_aes = AES.new(session_key, AES.MODE_EAX)
       ciphertext, tag = cipher_aes.encrypt_and_digest(f.read().encode("utf-8"))
   except Exception as e:
-    print("Unable to encrypt file: {}".format(src_file))
+    print(f"Unable to encrypt file: {src_file}")
     raise e
 
   try:
@@ -27,7 +27,7 @@ def encrypt_file(public_key, src_file, dest_file):
       for x in (encrypted_session_key, cipher_aes.nonce, tag, ciphertext):
         f.write(x)
   except Exception as e:
-    print("Unable to write output file {}".format(dest_file))
+    print(f"Unable to write output file {dest_file}")
     raise e
 
 
@@ -48,14 +48,14 @@ def decrypt_file(private_key, src_file, dest_file):
       data = cipher_aes.decrypt_and_verify(ciphertext, tag)
       data = data.decode("utf-8")
   except Exception as e:
-    print("Unable to decrypt file: {}".format(src_file))
+    print(f"Unable to decrypt file: {src_file}")
     raise e
 
   try:
     with open(dest_file, "w") as f:
       f.write(data)
   except Exception as e:
-    print("Unable to write output file: {}".format(dest_file))
+    print(f"Unable to write output file: {dest_file}")
     raise e
 
 

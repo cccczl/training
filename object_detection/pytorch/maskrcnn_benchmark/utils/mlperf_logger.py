@@ -41,11 +41,7 @@ def _log_print(logger, *args, **kwargs):
     if 'value' not in kwargs:
         kwargs['value'] = None
 
-    if kwargs.pop('log_all_ranks', False):
-        log = True
-    else:
-        log = (get_rank() == 0)
-
+    log = True if kwargs.pop('log_all_ranks', False) else (get_rank() == 0)
     if log:
         logger(*args, **kwargs)
 
@@ -86,8 +82,7 @@ def mlperf_submission_log(benchmark):
         value=f'{num_nodes}xSUBMISSION_PLATFORM_PLACEHOLDER')
 
 def generate_seeds(rng, size):
-    seeds = [rng.randint(0, 2**32 - 1) for _ in range(size)]
-    return seeds
+    return [rng.randint(0, 2**32 - 1) for _ in range(size)]
 
 def broadcast_seeds(seeds, device):
     if torch.distributed.is_initialized():

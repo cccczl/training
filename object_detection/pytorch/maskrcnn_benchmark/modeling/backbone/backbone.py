@@ -28,8 +28,7 @@ from . import resnet
 @registry.BACKBONES.register("R-101-C5")
 def build_resnet_backbone(cfg):
     body = resnet.ResNet(cfg)
-    model = nn.Sequential(OrderedDict([("body", body)]))
-    return model
+    return nn.Sequential(OrderedDict([("body", body)]))
 
 
 @registry.BACKBONES.register("R-50-FPN")
@@ -52,8 +51,7 @@ def build_resnet_fpn_backbone(cfg):
         ),
         top_blocks=fpn_module.LastLevelMaxPool(),
     )
-    model = nn.Sequential(OrderedDict([("body", body), ("fpn", fpn)]))
-    return model
+    return nn.Sequential(OrderedDict([("body", body), ("fpn", fpn)]))
 
 @registry.BACKBONES.register("R-50-FPN-RETINANET")
 @registry.BACKBONES.register("R-101-FPN-RETINANET")
@@ -76,12 +74,11 @@ def build_resnet_fpn_p3p7_backbone(cfg):
         ),
         top_blocks=fpn_module.LastLevelP6P7(in_channels_p6p7, out_channels),
     )
-    model = nn.Sequential(OrderedDict([("body", body), ("fpn", fpn)]))
-    return model
+    return nn.Sequential(OrderedDict([("body", body), ("fpn", fpn)]))
 
 def build_backbone(cfg):
-    assert cfg.MODEL.BACKBONE.CONV_BODY in registry.BACKBONES, \
-        "cfg.MODEL.BACKBONE.CONV_BODY: {} are not registered in registry".format(
-            cfg.MODEL.BACKBONE.CONV_BODY
-        )
+    assert (
+        cfg.MODEL.BACKBONE.CONV_BODY in registry.BACKBONES
+    ), f"cfg.MODEL.BACKBONE.CONV_BODY: {cfg.MODEL.BACKBONE.CONV_BODY} are not registered in registry"
+
     return registry.BACKBONES[cfg.MODEL.BACKBONE.CONV_BODY](cfg)

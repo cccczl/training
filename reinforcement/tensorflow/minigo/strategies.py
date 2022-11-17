@@ -89,11 +89,7 @@ class MCTSPlayer(MCTSPlayerInterface):
         self.num_readouts = num_readouts or FLAGS.num_readouts
         self.verbosity = FLAGS.verbose
         self.two_player_mode = two_player_mode
-        if two_player_mode:
-            self.temp_threshold = -1
-        else:
-            self.temp_threshold = FLAGS.softpick_move_cutoff
-
+        self.temp_threshold = -1 if two_player_mode else FLAGS.softpick_move_cutoff
         self.initialize_game()
         self.root = None
         self.resign_threshold = resign_threshold or FLAGS.resign_threshold

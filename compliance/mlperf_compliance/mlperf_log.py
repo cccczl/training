@@ -73,7 +73,7 @@ def get_caller(stack_index=2, root_dir=None):
   # Trim the filenames for readability.
   filename = caller.filename
   if root_dir is not None:
-    filename = re.sub("^" + root_dir + "/", "", filename)
+    filename = re.sub(f"^{root_dir}/", "", filename)
   return "%s:%d" % (filename, caller.lineno)
 
 
@@ -106,14 +106,14 @@ def _mlperf_print(key, value=None, benchmark=None, stack_offset=0,
   return_value = None
 
   if (tag_set is None and not PATTERN.match(key)) or key not in tag_set:
-    raise ValueError('Invalid key for MLPerf print: ' + str(key))
+    raise ValueError(f'Invalid key for MLPerf print: {str(key)}')
 
   if value is not None and deferred:
     raise ValueError("deferred is set to True, but a value was provided")
 
   if deferred:
     return_value = str(uuid.uuid4())
-    value = "DEFERRED: {}".format(return_value)
+    value = f"DEFERRED: {return_value}"
 
   if value is None:
     tag = key

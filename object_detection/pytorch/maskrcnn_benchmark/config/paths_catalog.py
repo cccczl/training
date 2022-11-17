@@ -143,7 +143,7 @@ class DatasetCatalog(object):
                 factory="PascalVOCDataset",
                 args=args,
             )
-        raise RuntimeError("Dataset not available: {}".format(name))
+        raise RuntimeError(f"Dataset not available: {name}")
 
 
 class ModelCatalog(object):
@@ -177,15 +177,14 @@ class ModelCatalog(object):
             return ModelCatalog.get_c2_detectron_12_2017_baselines(name)
         if name.startswith("ImageNetPretrained"):
             return ModelCatalog.get_c2_imagenet_pretrained(name)
-        raise RuntimeError("model not present in the catalog {}".format(name))
+        raise RuntimeError(f"model not present in the catalog {name}")
 
     @staticmethod
     def get_c2_imagenet_pretrained(name):
         prefix = ModelCatalog.S3_C2_DETECTRON_URL
         name = name[len("ImageNetPretrained/"):]
         name = ModelCatalog.C2_IMAGENET_MODELS[name]
-        url = "/".join([prefix, name])
-        return url
+        return "/".join([prefix, name])
 
     @staticmethod
     def get_c2_detectron_12_2017_baselines(name):
@@ -200,8 +199,7 @@ class ModelCatalog(object):
         # split in <model_id> and <model_name>
         model_id, model_name = name.split("/")
         # parsing to make it match the url address from the Caffe2 models
-        model_name = "{}.yaml".format(model_name)
+        model_name = f"{model_name}.yaml"
         signature = ModelCatalog.C2_DETECTRON_MODELS[name]
         unique_name = ".".join([model_name, signature])
-        url = "/".join([prefix, model_id, "12_2017_baselines", unique_name, suffix])
-        return url
+        return "/".join([prefix, model_id, "12_2017_baselines", unique_name, suffix])

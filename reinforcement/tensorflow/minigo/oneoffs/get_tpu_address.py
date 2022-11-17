@@ -35,8 +35,11 @@ _GCE_METADATA_ENDPOINT = 'http://metadata.google.internal'
 
 
 def _request_compute_metadata(path):
-    req = Request('%s/computeMetadata/v1/%s' % (_GCE_METADATA_ENDPOINT, path),
-                  headers={'Metadata-Flavor': 'Google'})
+    req = Request(
+        f'{_GCE_METADATA_ENDPOINT}/computeMetadata/v1/{path}',
+        headers={'Metadata-Flavor': 'Google'},
+    )
+
     return urlopen(req).read().decode('utf-8')
 
 
@@ -59,12 +62,13 @@ def main(argv):
     credentials = GoogleCredentials.get_application_default()
     service = discovery.build(
         'tpu', 'v1alpha1', credentials=credentials, cache_discovery=False)
-    full_name = 'projects/{}/locations/{}/nodes/{}'.format(project, zone, tpu)
+    full_name = f'projects/{project}/locations/{zone}/nodes/{tpu}'
     res = service.projects().locations().nodes().get(name=full_name).execute()
-    addrs = []
-    for endpoint in res['networkEndpoints']:
-        addrs.append('grpc://{}:{}'.format(endpoint['ipAddress'],
-                                           endpoint['port']))
+    addrs = [
+        f"grpc://{endpoint['ipAddress']}:{endpoint['port']}"
+        for endpoint in res['networkEndpoints']
+    ]
+
     print(','.join(addrs))
         
 

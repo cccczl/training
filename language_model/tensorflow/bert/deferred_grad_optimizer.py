@@ -101,12 +101,12 @@ class GradientAggregationOptimizer(tf.train.Optimizer):
 
   def _maybe_apply_grads_and_zero(self, distribution, global_step, accum_grads,
                                   var_list):
-    cond_return = tf.cond(
+    return tf.cond(
         tf.equal(tf.mod(global_step, self._grad_steps), self._grad_steps - 1),
-        lambda: self._apply_and_zero(
-            distribution, global_step, accum_grads, var_list),
-        lambda: self._accum(global_step))
-    return cond_return
+        lambda: self._apply_and_zero(distribution, global_step, accum_grads,
+                                     var_list),
+        lambda: self._accum(global_step),
+    )
 
   def apply_gradients(self, grads_and_vars, global_step=None, name=None):
     grad_list = []

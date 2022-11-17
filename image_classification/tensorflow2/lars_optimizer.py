@@ -91,9 +91,9 @@ class LARSOptimizer(optimizer_v2.OptimizerV2):
       ValueError: If a hyperparameter is set to a non-sensical value.
     """
     if momentum < 0.0:
-      raise ValueError("momentum should be positive: %s" % momentum)
+      raise ValueError(f"momentum should be positive: {momentum}")
     if weight_decay < 0.0:
-      raise ValueError("weight_decay should be positive: %s" % weight_decay)
+      raise ValueError(f"weight_decay should be positive: {weight_decay}")
     super(LARSOptimizer, self).__init__(name=name, **kwargs)
 
     self._set_hyper("learning_rate", learning_rate)
@@ -127,8 +127,8 @@ class LARSOptimizer(optimizer_v2.OptimizerV2):
 
   def compute_lr(self, grad, var, coefficients):
     scaled_lr = coefficients["learning_rate"]
-    if self._skip_list is None or not any(v in var.name
-                                          for v in self._skip_list):
+    if self._skip_list is None or all(v not in var.name
+                                      for v in self._skip_list):
       w_norm = linalg_ops.norm(var, ord=2)
       g_norm = linalg_ops.norm(grad, ord=2)
       trust_ratio = array_ops.where(

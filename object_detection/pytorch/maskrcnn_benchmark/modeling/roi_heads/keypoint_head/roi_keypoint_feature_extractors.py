@@ -38,7 +38,7 @@ class KeypointRCNNFeatureExtractor(nn.Module):
         next_feature = input_features
         self.blocks = []
         for layer_idx, layer_features in enumerate(layers, 1):
-            layer_name = "conv_fcn{}".format(layer_idx)
+            layer_name = f"conv_fcn{layer_idx}"
             module = Conv2d(next_feature, layer_features, 3, stride=1, padding=1)
             nn.init.kaiming_normal_(module.weight, mode="fan_out", nonlinearity="relu")
             nn.init.constant_(module.bias, 0)

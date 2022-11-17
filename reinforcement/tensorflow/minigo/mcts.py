@@ -92,8 +92,7 @@ class MCTSNode(object):
         self.children = {}  # map of flattened moves to resulting MCTSNode
 
     def __repr__(self):
-        return "<MCTSNode move=%s, N=%s, to_play=%s>" % (
-            self.position.recent[-1:], self.N, self.position.to_play)
+        return f"<MCTSNode move={self.position.recent[-1:]}, N={self.N}, to_play={self.position.to_play}>"
 
     @property
     def child_action_score(self):
@@ -139,10 +138,7 @@ class MCTSNode(object):
     def select_leaf(self):
         current = self
         pass_move = go.N * go.N
-        while True:
-            # if a node has never been evaluated, we have no basis to select a child.
-            if not current.is_expanded:
-                break
+        while current.is_expanded:
             # HACK: if last move was a pass, always investigate double-pass first
             # to avoid situations where we auto-lose by passing too early.
             if (current.position.recent and
@@ -255,9 +251,7 @@ class MCTSNode(object):
         if squash:
             probs = probs ** .98
         sum_probs = np.sum(probs)
-        if sum_probs == 0:
-            return probs
-        return probs / np.sum(probs)
+        return probs if sum_probs == 0 else probs / np.sum(probs)
 
     def best_child(self):
         # Sort by child_N tie break with action score.
@@ -275,7 +269,7 @@ class MCTSNode(object):
     def most_visited_path(self):
         output = []
         node = self
-        for node in self.most_visited_path_nodes():
+        for node in node.most_visited_path_nodes():
             output.append("%s (%d) ==> " % (
                 coords.to_gtp(coords.from_flat(node.fmove)), node.N))
 
@@ -305,11 +299,12 @@ class MCTSNode(object):
         p_rel = np.divide(p_delta, prior, out=np.zeros_like(
             p_delta), where=prior != 0)
         # Dump out some statistics
-        output = []
-        output.append("{q:.4f}\n".format(q=self.Q))
-        output.append(self.most_visited_path())
-        output.append(
-            "move : action    Q     U     P   P-Dir    N  soft-N  p-delta  p-rel")
+        output = [
+            "{q:.4f}\n".format(q=self.Q),
+            self.most_visited_path(),
+            "move : action    Q     U     P   P-Dir    N  soft-N  p-delta  p-rel",
+        ]
+
         for i in ranked_children[:15]:
             if self.child_N[i] == 0:
                 break

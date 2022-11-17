@@ -24,7 +24,7 @@ min_keypoints_per_image = 10
 
 
 def _count_visible_keypoints(anno):
-    return sum(sum(1 for v in ann["keypoints"][2::3] if v > 0) for ann in anno)
+    return sum(sum(v > 0 for v in ann["keypoints"][2::3]) for ann in anno)
 
 
 def _has_only_empty_bbox(anno):
@@ -44,9 +44,7 @@ def has_valid_annotation(anno):
         return True
     # for keypoint detection tasks, only consider valid images those
     # containing at least min_keypoints_per_image
-    if _count_visible_keypoints(anno) >= min_keypoints_per_image:
-        return True
-    return False
+    return _count_visible_keypoints(anno) >= min_keypoints_per_image
 
 
 class COCODataset(torchvision.datasets.coco.CocoDetection):
@@ -73,7 +71,7 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         self.contiguous_category_id_to_json_id = {
             v: k for k, v in self.json_category_id_to_contiguous_id.items()
         }
-        self.id_to_img_map = {k: v for k, v in enumerate(self.ids)}
+        self.id_to_img_map = dict(enumerate(self.ids))
         self._transforms = transforms
 
     def __getitem__(self, idx):
@@ -110,5 +108,4 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
 
     def get_img_info(self, index):
         img_id = self.id_to_img_map[index]
-        img_data = self.coco.imgs[img_id]
-        return img_data
+        return self.coco.imgs[img_id]

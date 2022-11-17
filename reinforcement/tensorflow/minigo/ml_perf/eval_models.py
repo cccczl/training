@@ -58,7 +58,7 @@ class WinStats:
         pattern = '\s*(\S+)' + '\s+(\d+)' * 6
         match = re.search(pattern, line)
         if match is None:
-            raise ValueError('Can\t parse line "{}"'.format(line))
+            raise ValueError(f'Can\t parse line "{line}"')
         self.model_name = match.group(1)
         raw_stats = [float(x) for x in match.groups()[1:]]
         self.black_wins = ColorWinStats(*raw_stats[:3])
@@ -67,20 +67,18 @@ class WinStats:
 
 
 def load_train_times():
-  models = []
-  path = os.path.join(FLAGS.model_dir, 'train_times.txt')
-  with tf.io.gfile.GFile(path, 'r') as f:
-    for line in f.readlines():
-      line = line.strip()
-      if line:
-        timestamp, name = line.split(' ')
-        path = os.path.join(FLAGS.model_dir, name + '.minigo')
-        models.append((float(timestamp), name, path))
-  return models
+    models = []
+    path = os.path.join(FLAGS.model_dir, 'train_times.txt')
+    with tf.io.gfile.GFile(path, 'r') as f:
+        for line in f.readlines():
+            if line := line.strip():
+                timestamp, name = line.split(' ')
+                path = os.path.join(FLAGS.model_dir, f'{name}.minigo')
+                models.append((float(timestamp), name, path))
+    return models
 
 
 def parse_win_stats_table(lines):
-    result = []
     while True:
         # Find the start of the win stats table.
         assert len(lines) > 1
@@ -88,11 +86,7 @@ def parse_win_stats_table(lines):
             break
         lines = lines[1:]
 
-    # Parse the expected number of lines from the table.
-    for line in lines[2:4]:
-        result.append(WinStats(line))
-
-    return result
+    return [WinStats(line) for line in lines[2:4]]
 
 
 def evaluate_model(eval_model_path):
@@ -103,14 +97,21 @@ def evaluate_model(eval_model_path):
         num_games = b - a;
         env = os.environ.copy()
         env['CUDA_VISIBLE_DEVICES'] = device
-        processes.append(checked_run([
-            'bazel-bin/cc/eval',
-            '--flagfile={}'.format(os.path.join(FLAGS.flags_dir, 'eval.flags')),
-            '--eval_model={}'.format(eval_model_path),
-            '--target_model={}'.format(FLAGS.target),
-            '--sgf_dir={}'.format(FLAGS.sgf_dir),
-            '--parallel_games={}'.format(num_games),
-            '--verbose=false'], env))
+        processes.append(
+            checked_run(
+                [
+                    'bazel-bin/cc/eval',
+                    f"--flagfile={os.path.join(FLAGS.flags_dir, 'eval.flags')}",
+                    f'--eval_model={eval_model_path}',
+                    f'--target_model={FLAGS.target}',
+                    f'--sgf_dir={FLAGS.sgf_dir}',
+                    f'--parallel_games={num_games}',
+                    '--verbose=false',
+                ],
+                env,
+            )
+        )
+
     all_output = wait(processes)
 
     total_wins = 0
@@ -135,10 +136,10 @@ def main(unused_argv):
     # Skip all models earlier than start and apply step.
     models = [x for x in models if int(x[1]) >= FLAGS.start][::FLAGS.step]
 
-    for i, (timestamp, name, path) in enumerate(models):
+    for timestamp, name, path in models:
         winrate = evaluate_model(path)
         if winrate >= FLAGS.winrate:
-            print('Model {} beat target after {}s'.format(name, timestamp))
+            print(f'Model {name} beat target after {timestamp}s')
             break
 
 

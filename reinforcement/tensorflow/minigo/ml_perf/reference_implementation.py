@@ -14,6 +14,7 @@
 
 """Runs a reinforcement learning loop to train a Go playing model."""
 
+
 import sys
 sys.path.insert(0, '.')  # nopep8
 
@@ -36,13 +37,19 @@ from tensorflow import gfile
 
 N = int(os.environ.get('BOARD_SIZE', 19))
 
-flags.DEFINE_string('checkpoint_dir', 'ml_perf/checkpoint/{}'.format(N),
-                    'The checkpoint directory specify a start model and a set '
-                    'of golden chunks used to start training.  If not '
-                    'specified, will start from scratch.')
+flags.DEFINE_string(
+    'checkpoint_dir',
+    f'ml_perf/checkpoint/{N}',
+    'The checkpoint directory specify a start model and a set '
+    'of golden chunks used to start training.  If not '
+    'specified, will start from scratch.',
+)
 
-flags.DEFINE_string('target_path', 'ml_perf/target/{}/target.pb'.format(N),
-                    'Path to the target model to beat.')
+flags.DEFINE_string(
+    'target_path',
+    f'ml_perf/target/{N}/target.pb',
+    'Path to the target model to beat.',
+)
 
 flags.DEFINE_integer('iterations', 100, 'Number of iterations of the RL loop.')
 
@@ -101,13 +108,11 @@ class State:
       # We don't have a good model yet, use a random fake model implementation.
       return 'random:0,0.4:0.4'
     else:
-      return '{},{}.pb'.format(
-         FLAGS.engine, os.path.join(fsdb.models_dir(), self.best_model_name))
+      return f'{FLAGS.engine},{os.path.join(fsdb.models_dir(), self.best_model_name)}.pb'
 
   @property
   def train_model_path(self):
-    return '{},{}.pb'.format(
-         FLAGS.engine, os.path.join(fsdb.models_dir(), self.train_model_name))
+    return f'{FLAGS.engine},{os.path.join(fsdb.models_dir(), self.train_model_name)}.pb'
 
   @property
   def seed(self):
@@ -133,8 +138,8 @@ class WinStats:
     pattern = '\s*(\S+)' + '\s+(\d+)' * 8
     match = re.search(pattern, line)
     if match is None:
-      raise ValueError('Can\t parse line "{}"'.format(line))
-    self.model_name = match.group(1)
+      raise ValueError(f'Can\t parse line "{line}"')
+    self.model_name = match[1]
     raw_stats = [float(x) for x in match.groups()[1:]]
     self.black_wins = ColorWinStats(*raw_stats[:4])
     self.white_wins = ColorWinStats(*raw_stats[4:])
@@ -148,15 +153,18 @@ def initialize_from_checkpoint(state):
   model_paths = glob.glob(os.path.join(FLAGS.checkpoint_dir,
                                        'work_dir/model.ckpt-*.pb'))
   if len(model_paths) != 1:
-    raise RuntimeError('Expected exactly one model in the checkpoint work_dir, '
-                       'got [{}]'.format(', '.join(model_paths)))
+    raise RuntimeError(
+        f"Expected exactly one model in the checkpoint work_dir, got [{', '.join(model_paths)}]"
+    )
   start_model_path = model_paths[0]
 
   # Copy the latest trained model into the models directory and use it on the
   # first round of selfplay.
   state.best_model_name = 'checkpoint'
-  shutil.copy(start_model_path,
-              os.path.join(fsdb.models_dir(), state.best_model_name + '.pb'))
+  shutil.copy(
+      start_model_path,
+      os.path.join(fsdb.models_dir(), f'{state.best_model_name}.pb'),
+  )
 
   # Copy the training chunks.
   golden_chunks_dir = os.path.join(FLAGS.checkpoint_dir, 'golden_chunks')
@@ -172,7 +180,6 @@ def initialize_from_checkpoint(state):
 
 
 def parse_win_stats_table(stats_str, num_lines):
-  result = []
   lines = stats_str.split('\n')
   while True:
     # Find the start of the win stats table.
@@ -181,11 +188,7 @@ def parse_win_stats_table(stats_str, num_lines):
         break
     lines = lines[1:]
 
-  # Parse the expected number of lines from the table.
-  for line in lines[2:2 + num_lines]:
-    result.append(WinStats(line))
-
-  return result
+  return [WinStats(line) for line in lines[2:2 + num_lines]]
 
 
 async def run(*cmd):
@@ -204,7 +207,7 @@ async def run(*cmd):
 
   stdout = await checked_run(*cmd)
 
-  log_path = os.path.join(FLAGS.base_dir, get_cmd_name(cmd) + '.log')
+  log_path = os.path.join(FLAGS.base_dir, f'{get_cmd_name(cmd)}.log')
   with gfile.Open(log_path, 'a') as f:
     f.write(expand_cmd_str(cmd))
     f.write('\n')
@@ -417,7 +420,7 @@ def rl_loop():
 def main(unused_argv):
   """Run the reinforcement learning loop."""
 
-  print('Wiping dir %s' % FLAGS.base_dir, flush=True)
+  print(f'Wiping dir {FLAGS.base_dir}', flush=True)
   shutil.rmtree(FLAGS.base_dir, ignore_errors=True)
   dirs = [fsdb.models_dir(), fsdb.selfplay_dir(), fsdb.holdout_dir(),
           fsdb.eval_dir(), fsdb.golden_chunk_dir(), fsdb.working_dir()]

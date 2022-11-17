@@ -109,24 +109,16 @@ class BaseTest(reference_data.BaseTest):
       channels: The number of channels in the fake image.
     """
 
-    name = "batch-size-{}_{}{}_version-{}_width-{}_channels-{}".format(
-        batch_size,
-        "bottleneck" if bottleneck else "building",
-        "_projection" if projection else "",
-        version,
-        width,
-        channels
-    )
+    name = f'batch-size-{batch_size}_{"bottleneck" if bottleneck else "building"}{"_projection" if projection else ""}_version-{version}_width-{width}_channels-{channels}'
 
     if version == 1:
       block_fn = resnet_model._building_block_v1
       if bottleneck:
         block_fn = resnet_model._bottleneck_block_v1
+    elif bottleneck:
+      block_fn = resnet_model._bottleneck_block_v2
     else:
       block_fn = resnet_model._building_block_v2
-      if bottleneck:
-        block_fn = resnet_model._bottleneck_block_v2
-
     g = tf.Graph()
     with g.as_default():
       tf.set_random_seed(self.name_to_seed(name))

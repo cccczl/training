@@ -117,8 +117,10 @@ def run(flags_obj):
   mlp_log.mlperf_print('submission_division', 'closed')
   mlp_log.mlperf_print('submission_org', 'google')
   mlp_log.mlperf_print(
-      'submission_platform', 'tpu-v3-{}'.format(flags_obj.num_replicas)
-      if flags_obj.tpu else 'gpu-v100-{}'.format(flags_obj.num_gpus))
+      'submission_platform',
+      f'tpu-v3-{flags_obj.num_replicas}'
+      if flags_obj.tpu else f'gpu-v100-{flags_obj.num_gpus}',
+  )
   mlp_log.mlperf_print('submission_status', 'cloud')
 
   common.print_flags(flags_obj)
@@ -178,12 +180,10 @@ def run(flags_obj):
   with distribution_utils.get_strategy_scope(strategy):
     runnable = resnet_runnable.ResnetRunnable(flags_obj, time_callback)
 
-  eval_interval = (
-      flags_obj.epochs_between_evals *
-      per_epoch_steps if not flags_obj.skip_eval else None)
-  eval_offset = (
-      flags_obj.eval_offset_epochs *
-      per_epoch_steps if not flags_obj.skip_eval else 0)
+  eval_interval = (None if flags_obj.skip_eval else
+                   flags_obj.epochs_between_evals * per_epoch_steps)
+  eval_offset = (0 if flags_obj.skip_eval else
+                 flags_obj.eval_offset_epochs * per_epoch_steps)
   if eval_offset != 0:
     eval_offset -= eval_interval
   checkpoint_interval = (
@@ -222,8 +222,7 @@ def run(flags_obj):
 
   mlp_log.mlperf_print('init_stop', None)
 
-  profile_steps = flags_obj.profile_steps
-  if profile_steps:
+  if profile_steps := flags_obj.profile_steps:
     profile_steps = [int(i) for i in profile_steps.split(',')]
     if profile_steps[0] < 0:
       runnable.trace_start(-1)
@@ -245,8 +244,7 @@ def run(flags_obj):
   time_callback.on_train_end()
   mlp_log.mlperf_print('run_final', None)
 
-  stats = build_stats(runnable, time_callback)
-  return stats
+  return build_stats(runnable, time_callback)
 
 
 def define_imagenet_keras_flags():

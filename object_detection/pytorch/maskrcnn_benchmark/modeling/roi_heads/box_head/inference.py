@@ -170,11 +170,10 @@ def make_roi_box_post_processor(cfg):
     detections_per_img = cfg.MODEL.ROI_HEADS.DETECTIONS_PER_IMG
     cls_agnostic_bbox_reg = cfg.MODEL.CLS_AGNOSTIC_BBOX_REG
 
-    postprocessor = PostProcessor(
+    return PostProcessor(
         score_thresh,
         nms_thresh,
         detections_per_img,
         box_coder,
-        cls_agnostic_bbox_reg
+        cls_agnostic_bbox_reg,
     )
-    return postprocessor

@@ -54,9 +54,7 @@ def train(cfg, local_rank, distributed):
             broadcast_buffers=False,
         )
 
-    arguments = {}
-    arguments["iteration"] = 0
-
+    arguments = {"iteration": 0}
     output_dir = cfg.OUTPUT_DIR
 
     save_to_disk = get_rank() == 0
@@ -64,7 +62,7 @@ def train(cfg, local_rank, distributed):
         cfg, model, optimizer, scheduler, output_dir, save_to_disk
     )
     extra_checkpoint_data = checkpointer.load(cfg.MODEL.WEIGHT)
-    arguments.update(extra_checkpoint_data)
+    arguments |= extra_checkpoint_data
 
     data_loader = make_data_loader(
         cfg,
@@ -165,17 +163,17 @@ def main():
         mkdir(output_dir)
 
     logger = setup_logger("maskrcnn_benchmark", output_dir, get_rank())
-    logger.info("Using {} GPUs".format(num_gpus))
+    logger.info(f"Using {num_gpus} GPUs")
     logger.info(args)
 
     logger.info("Collecting env info (might take some time)")
     logger.info("\n" + collect_env_info())
 
-    logger.info("Loaded configuration file {}".format(args.config_file))
+    logger.info(f"Loaded configuration file {args.config_file}")
     with open(args.config_file, "r") as cf:
         config_str = "\n" + cf.read()
         logger.info(config_str)
-    logger.info("Running with config:\n{}".format(cfg))
+    logger.info(f"Running with config:\n{cfg}")
 
     model = train(cfg, args.local_rank, args.distributed)
 

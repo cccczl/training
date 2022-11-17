@@ -59,7 +59,7 @@ class NeuMF(nn.Module):
         xmlpu = self.mlp_user_embed(user)
         xmlpi = self.mlp_item_embed(item)
         xmlp = torch.cat((xmlpu, xmlpi), dim=1)
-        for i, layer in enumerate(self.mlp):
+        for layer in self.mlp:
             xmlp = layer(xmlp)
             xmlp = nn.functional.relu(xmlp)
 

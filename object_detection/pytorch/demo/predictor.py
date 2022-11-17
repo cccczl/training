@@ -161,7 +161,7 @@ class COCODemo(object):
             mean=cfg.INPUT.PIXEL_MEAN, std=cfg.INPUT.PIXEL_STD
         )
 
-        transform = T.Compose(
+        return T.Compose(
             [
                 T.ToPILImage(),
                 T.Resize(self.min_image_size),
@@ -170,7 +170,6 @@ class COCODemo(object):
                 normalize_transform,
             ]
         )
-        return transform
 
     def run_on_opencv_image(self, image):
         """
@@ -260,8 +259,7 @@ class COCODemo(object):
         Simple function that adds fixed colors depending on the class
         """
         colors = labels[:, None] * self.palette
-        colors = (colors % 255).numpy().astype("uint8")
-        return colors
+        return (colors % 255).numpy().astype("uint8")
 
     def overlay_boxes(self, image, predictions):
         """
@@ -308,9 +306,7 @@ class COCODemo(object):
             )
             image = cv2.drawContours(image, contours, -1, color, 3)
 
-        composite = image
-
-        return composite
+        return image
 
     def overlay_keypoints(self, image, predictions):
         keypoints = predictions.get_field("keypoints")

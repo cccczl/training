@@ -104,8 +104,7 @@ def get_model_data(glob, existing):
         )
         model_data.append((row_name, metadata))
 
-    print("Read {} Models, {} new, {} existing".format(
-        len(globbed), len(model_data), skipped))
+    print(f"Read {len(globbed)} Models, {len(model_data)} new, {skipped} existing")
     return model_data
 
 
@@ -126,7 +125,7 @@ def write_records(bt_table, model_data):
         rows.append(row)
         # Print a couple of the row name.
         if i < 5 or i + 5 > len(model_data):
-            print("\t{}\t{}".format(i, row_name))
+            print(f"\t{i}\t{row_name}")
 
     test = input("Commit ('y'/'yes' required): ")
     if test.lower() not in ("y", "yes"):
@@ -137,7 +136,7 @@ def write_records(bt_table, model_data):
     # validate that all rows were written successfully
     for i, status in enumerate(response):
         if status.code is not 0:
-            print("Row number {} failed to write {}".format(i, status))
+            print(f"Row number {i} failed to write {status}")
 
 
 def main(unusedargv):
@@ -152,16 +151,14 @@ def main(unusedargv):
 
     # Get existing SGF paths so we avoid uploading duplicates
     existing = set(read_existing_models(bt_table))
-    print("Found {} existing".format(len(existing)))
+    print(f"Found {len(existing)} existing")
 
     if existing:
         print("\tmin:", min(existing))
         print("\tmax:", max(existing))
         print()
 
-    # Get all SGFs that match glob, skipping SGFs with existing records.
-    data = get_model_data(FLAGS.model_glob, existing)
-    if data:
+    if data := get_model_data(FLAGS.model_glob, existing):
         write_records(bt_table, data)
 
 

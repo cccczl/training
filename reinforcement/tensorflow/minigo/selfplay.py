@@ -55,11 +55,7 @@ def play(network):
     """
     readouts = FLAGS.num_readouts  # defined in strategies.py
     # Disable resign in 5% of games
-    if random.random() < FLAGS.resign_disable_pct:
-        resign_threshold = -1.0
-    else:
-        resign_threshold = None
-
+    resign_threshold = -1.0 if random.random() < FLAGS.resign_disable_pct else None
     player = MCTSPlayer(network, resign_threshold=resign_threshold)
 
     player.initialize_game()
@@ -119,18 +115,18 @@ def run_game(load_file, selfplay_dir=None, holdout_dir=None,
         utils.ensure_dir_exists(selfplay_dir)
         utils.ensure_dir_exists(holdout_dir)
 
-    with utils.logged_timer("Loading weights from %s ... " % load_file):
+    with utils.logged_timer(f"Loading weights from {load_file} ... "):
         network = dual_net.DualNetwork(load_file)
 
     with utils.logged_timer("Playing game"):
         player = play(network)
 
-    output_name = '{}-{}'.format(int(time.time()), socket.gethostname())
+    output_name = f'{int(time.time())}-{socket.gethostname()}'
     game_data = player.extract_data()
     if sgf_dir is not None:
-        with gfile.GFile(os.path.join(minimal_sgf_dir, '{}.sgf'.format(output_name)), 'w') as f:
+        with gfile.GFile(os.path.join(minimal_sgf_dir, f'{output_name}.sgf'), 'w') as f:
             f.write(player.to_sgf(use_comments=False))
-        with gfile.GFile(os.path.join(full_sgf_dir, '{}.sgf'.format(output_name)), 'w') as f:
+        with gfile.GFile(os.path.join(full_sgf_dir, f'{output_name}.sgf'), 'w') as f:
             f.write(player.to_sgf())
 
     tf_examples = preprocessing.make_dataset_from_selfplay(game_data)
@@ -138,11 +134,9 @@ def run_game(load_file, selfplay_dir=None, holdout_dir=None,
     if selfplay_dir is not None:
         # Hold out 5% of games for validation.
         if random.random() < holdout_pct:
-            fname = os.path.join(holdout_dir,
-                                 "{}.tfrecord.zz".format(output_name))
+            fname = os.path.join(holdout_dir, f"{output_name}.tfrecord.zz")
         else:
-            fname = os.path.join(selfplay_dir,
-                                 "{}.tfrecord.zz".format(output_name))
+            fname = os.path.join(selfplay_dir, f"{output_name}.tfrecord.zz")
 
         preprocessing.write_tf_examples(fname, tf_examples)
 

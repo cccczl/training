@@ -34,8 +34,6 @@ def define_distribution(worker_hosts=True, task_index=True):
   Returns:
     A list of flags for core.py to marks as key flags.
   """
-  key_flags = []
-
   if worker_hosts:
     flags.DEFINE_string(
         name='worker_hosts', default=None,
@@ -51,4 +49,4 @@ def define_distribution(worker_hosts=True, task_index=True):
         help=help_wrap('If multi-worker training, the task_index of this '
                        'worker.'))
 
-  return key_flags
+  return []

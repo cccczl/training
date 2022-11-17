@@ -53,4 +53,4 @@ def set_mixed_precision_policy(dtype, loss_scale=None):
   elif dtype == tf.float32:
     tf.keras.mixed_precision.experimental.set_policy('float32')
   else:
-    raise ValueError("Unexpected dtype: %s" % dtype)
+    raise ValueError(f"Unexpected dtype: {dtype}")

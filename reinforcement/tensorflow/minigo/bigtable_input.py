@@ -361,17 +361,14 @@ class GameQueue:
             utils.dbg('No games between %d and %d' % (earliest, latest))
             return
         most_recent = gbt[-1]
-        if isinstance(t, datetime.timedelta):
-            target = most_recent[0] - t
-        else:
-            target = t
+        target = most_recent[0] - t if isinstance(t, datetime.timedelta) else t
         i = bisect.bisect_right(gbt, (target,))
         if i >= len(gbt):
-            utils.dbg('Last game is already at %s' % gbt[-1][0])
+            utils.dbg(f'Last game is already at {gbt[-1][0]}')
             return
         when, which = gbt[i]
         utils.dbg('Most recent:  %s  %s' % most_recent)
-        utils.dbg('     Target:  %s  %s' % (when, which))
+        utils.dbg(f'     Target:  {when}  {which}')
         which = int(which)
         self.delete_row_range(ROW_PREFIX, which, latest)
         self.delete_row_range(ROWCOUNT_PREFIX, which, latest)
@@ -478,7 +475,7 @@ class GameQueue:
             ROWCOUNT_PREFIX.format(game_end),
             filter_=bigtable_row_filters.ColumnRangeFilter(
                 METADATA, MOVE_COUNT, MOVE_COUNT))
-        return sum([int(r.cell_value(METADATA, MOVE_COUNT)) for r in rows])
+        return sum(int(r.cell_value(METADATA, MOVE_COUNT)) for r in rows)
 
     def moves_from_games(self, start_game, end_game, moves, shuffle,
                          column_family, column):
@@ -530,14 +527,14 @@ class GameQueue:
         """
         self.wait_for_fresh_games()
         latest_game = self.latest_game_number
-        utils.dbg('Latest game in %s: %s' % (self.btspec.table, latest_game))
+        utils.dbg(f'Latest game in {self.btspec.table}: {latest_game}')
         if latest_game == 0:
             raise ValueError('Cannot find a latest game in the table')
 
         start = int(max(0, latest_game - n))
-        ds = self.moves_from_games(start, latest_game, moves, shuffle,
-                                   column_family, column)
-        return ds
+        return self.moves_from_games(
+            start, latest_game, moves, shuffle, column_family, column
+        )
 
     def _write_move_counts(self, sess, h):
         """Add move counts from the given histogram to the table.
@@ -557,7 +554,8 @@ class GameQueue:
                 k = str(k, 'utf-8')
                 vs = str(v)
                 yield (k.replace('g_', 'ct_') + '_%d' % v, vs)
-                yield (k + '_m_000', vs)
+                yield (f'{k}_m_000', vs)
+
         mc = tf.data.Dataset.from_generator(gen, (tf.string, tf.string))
         wr_op = self.tf_table.write(mc,
                                     column_families=[METADATA],

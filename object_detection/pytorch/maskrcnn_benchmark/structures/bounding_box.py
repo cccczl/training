@@ -33,14 +33,12 @@ class BoxList(object):
         device = bbox.device if isinstance(bbox, torch.Tensor) else torch.device("cpu")
         bbox = torch.as_tensor(bbox, dtype=torch.float32, device=device)
         if bbox.ndimension() != 2:
-            raise ValueError(
-                "bbox should have 2 dimensions, got {}".format(bbox.ndimension())
-            )
+            raise ValueError(f"bbox should have 2 dimensions, got {bbox.ndimension()}")
         if bbox.size(-1) != 4:
             raise ValueError(
-                "last dimenion of bbox should have a "
-                "size of 4, got {}".format(bbox.size(-1))
+                f"last dimenion of bbox should have a size of 4, got {bbox.size(-1)}"
             )
+
         if mode not in ("xyxy", "xywh"):
             raise ValueError("mode should be 'xyxy' or 'xywh'")
 
@@ -75,13 +73,12 @@ class BoxList(object):
         xmin, ymin, xmax, ymax = self._split_into_xyxy()
         if mode == "xyxy":
             bbox = torch.cat((xmin, ymin, xmax, ymax), dim=-1)
-            bbox = BoxList(bbox, self.size, mode=mode)
         else:
             TO_REMOVE = 1
             bbox = torch.cat(
                 (xmin, ymin, xmax - xmin + TO_REMOVE, ymax - ymin + TO_REMOVE), dim=-1
             )
-            bbox = BoxList(bbox, self.size, mode=mode)
+        bbox = BoxList(bbox, self.size, mode=mode)
         bbox._copy_extra_fields(self)
         return bbox
 
@@ -190,10 +187,6 @@ class BoxList(object):
         cropped_xmax = (xmax - box[0]).clamp(min=0, max=w)
         cropped_ymax = (ymax - box[1]).clamp(min=0, max=h)
 
-        # TODO should I filter empty boxes here?
-        if False:
-            is_empty = (cropped_xmin == cropped_xmax) | (cropped_ymin == cropped_ymax)
-
         cropped_box = torch.cat(
             (cropped_xmin, cropped_ymin, cropped_xmax, cropped_ymax), dim=-1
         )
@@ -256,15 +249,15 @@ class BoxList(object):
             if self.has_field(field):
                 bbox.add_field(field, self.get_field(field))
             elif not skip_missing:
-                raise KeyError("Field '{}' not found in {}".format(field, self))
+                raise KeyError(f"Field '{field}' not found in {self}")
         return bbox
 
     def __repr__(self):
-        s = self.__class__.__name__ + "("
-        s += "num_boxes={}, ".format(len(self))
-        s += "image_width={}, ".format(self.size[0])
-        s += "image_height={}, ".format(self.size[1])
-        s += "mode={})".format(self.mode)
+        s = f"{self.__class__.__name__}("
+        s += f"num_boxes={len(self)}, "
+        s += f"image_width={self.size[0]}, "
+        s += f"image_height={self.size[1]}, "
+        s += f"mode={self.mode})"
         return s
 
 

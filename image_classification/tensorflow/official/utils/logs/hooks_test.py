@@ -78,24 +78,24 @@ class ExamplesPerSecondHookTest(tf.test.TestCase):
     self.logged_message = ''
     for _ in range(every_n_steps):
       mon_sess.run(self.train_op)
-      self.assertEqual(str(self.logged_message).find('exp/sec'), -1)
+      self.assertEqual(self.logged_message.find('exp/sec'), -1)
 
     mon_sess.run(self.train_op)
     global_step_val = sess.run(self.global_step)
     # assertNotRegexpMatches is not supported by python 3.1 and later
     if global_step_val > warm_steps:
-      self.assertRegexpMatches(str(self.logged_message), 'exp/sec')
+      self.assertRegexpMatches(self.logged_message, 'exp/sec')
     else:
-      self.assertEqual(str(self.logged_message).find('exp/sec'), -1)
+      self.assertEqual(self.logged_message.find('exp/sec'), -1)
 
     # Add additional run to verify proper reset when called multiple times.
     self.logged_message = ''
     mon_sess.run(self.train_op)
     global_step_val = sess.run(self.global_step)
     if every_n_steps == 1 and global_step_val > warm_steps:
-      self.assertRegexpMatches(str(self.logged_message), 'exp/sec')
+      self.assertRegexpMatches(self.logged_message, 'exp/sec')
     else:
-      self.assertEqual(str(self.logged_message).find('exp/sec'), -1)
+      self.assertEqual(self.logged_message.find('exp/sec'), -1)
 
     hook.end(sess)
 
@@ -126,12 +126,12 @@ class ExamplesPerSecondHookTest(tf.test.TestCase):
 
     self.logged_message = ''
     mon_sess.run(self.train_op)
-    self.assertEqual(str(self.logged_message).find('exp/sec'), -1)
+    self.assertEqual(self.logged_message.find('exp/sec'), -1)
     time.sleep(every_n_secs)
 
     self.logged_message = ''
     mon_sess.run(self.train_op)
-    self.assertRegexpMatches(str(self.logged_message), 'exp/sec')
+    self.assertRegexpMatches(self.logged_message, 'exp/sec')
 
     hook.end(sess)
 

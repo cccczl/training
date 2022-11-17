@@ -37,12 +37,10 @@ TAG_PATTERN = re.compile("^[A-Za-z0-9_]+$")
 
 
 def extract_tags(module):
-  output = []
-  for i in dir(module):
-    if i.startswith("_") or not isinstance(getattr(module, i), str):
-      continue
-    output.append(i)
-  return output
+  return [
+      i for i in dir(module)
+      if not i.startswith("_") and isinstance(getattr(module, i), str)
+  ]
 
 
 def check_collisions():
@@ -53,14 +51,14 @@ def check_collisions():
       defining_modules[tag].append(name)
 
   duplicate_defs = {k: v for k, v in defining_modules.items() if len(v) > 1}
-  for key in duplicate_defs.keys():
-    print("Variable {} defined multiple times".format(key))
+  for key in duplicate_defs:
+    print(f"Variable {key} defined multiple times")
 
 
 def check_format():
   for tag in sorted(tags.ALL_USED_TAGS):
     if not TAG_PATTERN.match(tag):
-      print("Malformed tag: {}".format(tag))
+      print(f"Malformed tag: {tag}")
 
 
 if __name__ == "__main__":

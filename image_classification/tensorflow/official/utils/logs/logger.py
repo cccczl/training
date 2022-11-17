@@ -145,9 +145,7 @@ def _collect_tensorflow_environment_variables(run_info):
 # which is not exposed for import.
 def _collect_cpu_info(run_info):
   """Collect the CPU information for the local environment."""
-  cpu_info = {}
-
-  cpu_info["num_cores"] = multiprocessing.cpu_count()
+  cpu_info = {"num_cores": multiprocessing.cpu_count()}
 
   # Note: cpuinfo is not installed in the TensorFlow OSS tree.
   # It is installable via pip.
@@ -162,11 +160,11 @@ def _collect_cpu_info(run_info):
 
 def _collect_gpu_info(run_info):
   """Collect local GPU information by TF device library."""
-  gpu_info = {}
   local_device_protos = device_lib.list_local_devices()
 
-  gpu_info["count"] = len([d for d in local_device_protos
-                           if d.device_type == "GPU"])
+  gpu_info = {
+      "count": len([d for d in local_device_protos if d.device_type == "GPU"])
+  }
   # The device description usually is a JSON string, which contains the GPU
   # model info, eg:
   # "device: 0, name: Tesla P100-PCIE-16GB, pci bus id: 0000:00:04.0"

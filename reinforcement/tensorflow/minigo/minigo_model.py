@@ -27,10 +27,7 @@ HEADER_SIZE = 24
 
 
 def _is_supported_metadata_type(value):
-    for t in [int, str, float, bool]:
-        if isinstance(value, t):
-            return True
-    return False
+    return any(isinstance(value, t) for t in [int, str, float, bool])
 
 
 def write_graph_def(graph_def, metadata, dst_path):
@@ -54,9 +51,11 @@ def write_model_bytes(model_bytes, metadata, dst_path):
     """
 
     for key, value in metadata.items():
-        assert isinstance(key, str), '%s is not a string' % key
-        assert _is_supported_metadata_type(value), '%s: unsupported type %s' % (
-            key, type(value).__name__)
+        assert isinstance(key, str), f'{key} is not a string'
+        assert _is_supported_metadata_type(
+            value
+        ), f'{key}: unsupported type {type(value).__name__}'
+
 
     metadata_bytes = json.dumps(metadata, sort_keys=True,
                                 separators=(',', ':')).encode()
@@ -66,11 +65,7 @@ def write_model_bytes(model_bytes, metadata, dst_path):
     # Otherwise, write to a temp file and rename. The temp file is written to
     # the same filesystem as dst_path on the assumption that the rename will be
     # atomic.
-    if dst_path.startswith('gs://'):
-        write_path = dst_path
-    else:
-        write_path = dst_path + '.tmp'
-
+    write_path = dst_path if dst_path.startswith('gs://') else f'{dst_path}.tmp'
     # File header:
     #   char[8]: '<minigo>'
     #   uint64: version
@@ -105,8 +100,7 @@ def read_model(path):
     with tf.io.gfile.GFile(path, 'rb') as f:
         magic = f.read(MAGIC_SIZE).decode('utf-8')
         if magic != MAGIC:
-            raise RuntimeError(
-                'expected magic string %s, got %s' % (MAGIC, magic))
+            raise RuntimeError(f'expected magic string {MAGIC}, got {magic}')
 
         version, file_size, metadata_size = struct.unpack(
             '<QQQ', f.read(HEADER_SIZE))

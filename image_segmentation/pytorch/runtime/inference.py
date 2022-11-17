@@ -28,7 +28,7 @@ def evaluate(flags, model, loader, loss_fn, score_fn, device, epoch=0, is_distri
     eval_loss = []
     scores = []
     with torch.no_grad():
-        for i, batch in enumerate(tqdm(loader, disable=(rank != 0) or not flags.verbose)):
+        for batch in tqdm(loader, disable=(rank != 0) or not flags.verbose):
             image, label = batch
             image, label = image.to(device), label.to(device)
             if image.numel() == 0:
@@ -55,13 +55,13 @@ def evaluate(flags, model, loader, loss_fn, score_fn, device, epoch=0, is_distri
     # eval_loss = torch.mean(torch.stack(eval_loss, dim=0), dim=0)
 
     scores, eval_loss = scores.cpu().numpy(), float(eval_loss.cpu().numpy())
-    eval_metrics = {"epoch": epoch,
-                    "L1 dice": scores[-2],
-                    "L2 dice": scores[-1],
-                    "mean_dice": (scores[-1] + scores[-2]) / 2,
-                    "eval_loss": eval_loss}
-
-    return eval_metrics
+    return {
+        "epoch": epoch,
+        "L1 dice": scores[-2],
+        "L2 dice": scores[-1],
+        "mean_dice": (scores[-1] + scores[-2]) / 2,
+        "eval_loss": eval_loss,
+    }
 
 
 def pad_input(volume, roi_shape, strides, padding_mode, padding_val, dim=3):

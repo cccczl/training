@@ -162,10 +162,10 @@ class FastRCNNLossComputation(object):
         # the corresponding ground truth labels, to be used with
         # advanced indexing
         sampled_pos_inds_subset = torch.nonzero(labels > 0).squeeze(1)
-        labels_pos = labels[sampled_pos_inds_subset]
         if self.cls_agnostic_bbox_reg:
             map_inds = torch.tensor([4, 5, 6, 7], device=device)
         else:
+            labels_pos = labels[sampled_pos_inds_subset]
             map_inds = 4 * labels_pos[:, None] + torch.tensor(
                 [0, 1, 2, 3], device=device)
 
@@ -196,11 +196,6 @@ def make_roi_box_loss_evaluator(cfg):
 
     cls_agnostic_bbox_reg = cfg.MODEL.CLS_AGNOSTIC_BBOX_REG
 
-    loss_evaluator = FastRCNNLossComputation(
-        matcher, 
-        fg_bg_sampler, 
-        box_coder, 
-        cls_agnostic_bbox_reg
+    return FastRCNNLossComputation(
+        matcher, fg_bg_sampler, box_coder, cls_agnostic_bbox_reg
     )
-
-    return loss_evaluator

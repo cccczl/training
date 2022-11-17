@@ -10,8 +10,7 @@ def get_train_transforms():
     cast = Cast(types=(np.float32, np.uint8))
     rand_scale = RandomBrightnessAugmentation(factor=0.3, prob=0.1)
     rand_noise = GaussianNoise(mean=0.0, std=0.1, prob=0.1)
-    train_transforms = transforms.Compose([rand_flip, cast, rand_scale, rand_noise])
-    return train_transforms
+    return transforms.Compose([rand_flip, cast, rand_scale, rand_noise])
 
 
 class RandBalancedCrop:

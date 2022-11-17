@@ -24,6 +24,4 @@ def smooth_l1_loss(input, target, beta=1. / 9, size_average=True):
     n = torch.abs(input - target)
     cond = n < beta
     loss = torch.where(cond, 0.5 * n ** 2 / beta, n - 0.5 * beta)
-    if size_average:
-        return loss.mean()
-    return loss.sum()
+    return loss.mean() if size_average else loss.sum()

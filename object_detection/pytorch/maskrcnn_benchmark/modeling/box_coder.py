@@ -59,8 +59,7 @@ class BoxCoder(object):
         targets_dw = ww * torch.log(gt_widths / ex_widths)
         targets_dh = wh * torch.log(gt_heights / ex_heights)
 
-        targets = torch.stack((targets_dx, targets_dy, targets_dw, targets_dh), dim=1)
-        return targets
+        return torch.stack((targets_dx, targets_dy, targets_dw, targets_dh), dim=1)
 
     def decode(self, rel_codes, boxes):
         """

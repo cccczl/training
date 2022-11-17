@@ -115,7 +115,7 @@ class ResNet(nn.Module):
         self.stages = []
         self.return_features = {}
         for stage_spec in stage_specs:
-            name = "layer" + str(stage_spec.index)
+            name = f"layer{str(stage_spec.index)}"
             stage2_relative_factor = 2 ** (stage_spec.index - 1)
             bottleneck_channels = stage2_bottleneck_channels * stage2_relative_factor
             out_channels = stage2_out_channels * stage2_relative_factor
@@ -144,7 +144,7 @@ class ResNet(nn.Module):
             if stage_index == 0:
                 m = self.stem  # stage 0 is the stem
             else:
-                m = getattr(self, "layer" + str(stage_index))
+                m = getattr(self, f"layer{str(stage_index)}")
             for p in m.parameters():
                 p.requires_grad = False
 
@@ -183,7 +183,7 @@ class ResNetHead(nn.Module):
         self.stages = []
         stride = stride_init
         for stage in stages:
-            name = "layer" + str(stage.index)
+            name = f"layer{str(stage.index)}"
             if not stride:
                 stride = int(stage.index > 1) + 1
             module = _make_stage(

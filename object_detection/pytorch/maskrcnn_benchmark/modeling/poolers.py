@@ -73,13 +73,13 @@ class Pooler(nn.Module):
             sampling_ratio (int): sampling ratio for ROIAlign
         """
         super(Pooler, self).__init__()
-        poolers = []
-        for scale in scales:
-            poolers.append(
-                ROIAlign(
-                    output_size, spatial_scale=scale, sampling_ratio=sampling_ratio
-                )
+        poolers = [
+            ROIAlign(
+                output_size, spatial_scale=scale, sampling_ratio=sampling_ratio
             )
+            for scale in scales
+        ]
+
         self.poolers = nn.ModuleList(poolers)
         self.output_size = output_size
         # get the levels in the feature map by leveraging the fact that the network always
@@ -98,8 +98,7 @@ class Pooler(nn.Module):
             ],
             dim=0,
         )
-        rois = torch.cat([ids, concat_boxes], dim=1)
-        return rois
+        return torch.cat([ids, concat_boxes], dim=1)
 
     def forward(self, x, boxes):
         """

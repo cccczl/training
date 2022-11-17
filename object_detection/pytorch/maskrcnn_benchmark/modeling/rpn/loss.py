@@ -146,8 +146,7 @@ class RPNLossComputation(object):
 # This function should be overwritten in RetinaNet
 def generate_rpn_labels(matched_targets):
     matched_idxs = matched_targets.get_field("matched_idxs")
-    labels_per_image = matched_idxs >= 0
-    return labels_per_image
+    return matched_idxs >= 0
 
 
 def make_rpn_loss_evaluator(cfg, box_coder):
@@ -161,10 +160,6 @@ def make_rpn_loss_evaluator(cfg, box_coder):
         cfg.MODEL.RPN.BATCH_SIZE_PER_IMAGE, cfg.MODEL.RPN.POSITIVE_FRACTION
     )
 
-    loss_evaluator = RPNLossComputation(
-        matcher,
-        fg_bg_sampler,
-        box_coder,
-        generate_rpn_labels
+    return RPNLossComputation(
+        matcher, fg_bg_sampler, box_coder, generate_rpn_labels
     )
-    return loss_evaluator

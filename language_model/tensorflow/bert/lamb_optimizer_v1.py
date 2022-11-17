@@ -48,11 +48,8 @@ class LAMBOptimizer(optimizer.Optimizer):
     self.clip_by_global_norm_after_gradient_allreduce = clip_by_global_norm_after_gradient_allreduce
     # exclude_from_layer_adaptation is set to exclude_from_weight_decay if the
     # arg is None.
-    if exclude_from_layer_adaptation:
-      self.exclude_from_layer_adaptation = exclude_from_layer_adaptation
-    else:
-      self.exclude_from_layer_adaptation = exclude_from_weight_decay
-
+    self.exclude_from_layer_adaptation = (exclude_from_layer_adaptation
+                                          or exclude_from_weight_decay)
     # Tensor versions of the constructor arguments, created in _prepare().
     self._lr_t = None
     self._beta1_t = None
@@ -62,10 +59,7 @@ class LAMBOptimizer(optimizer.Optimizer):
 
   def _get_beta_accumulators(self):
     with ops.init_scope():
-      if context.executing_eagerly():
-        graph = None
-      else:
-        graph = ops.get_default_graph()
+      graph = None if context.executing_eagerly() else ops.get_default_graph()
       return (self._get_non_slot_variable("beta1_power", graph=graph),
               self._get_non_slot_variable("beta2_power", graph=graph))
 
@@ -271,5 +265,5 @@ class LAMBOptimizer(optimizer.Optimizer):
     """Get the variable name from the tensor name."""
     m = re.match("^(.*):\\d+$", param_name)
     if m is not None:
-      param_name = m.group(1)
+      param_name = m[1]
     return param_name

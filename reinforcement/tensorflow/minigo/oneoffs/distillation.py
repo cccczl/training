@@ -107,7 +107,7 @@ def main(unused_argv):
                     x, pi, val, pi_err, val_err = sess.run(
                         [x_in, p_out, v_out, p_err, v_err])
 
-                    for i, (x_i, pi_i, val_i) in enumerate(zip(x, pi, val)):
+                    for x_i, pi_i, val_i in zip(x, pi, val):
                         # NOTE: The teacher's policy has much higher entropy
                         # Than the Self-play policy labels which are mostly 0
                         # expect that resulting file is 3-5x larger.

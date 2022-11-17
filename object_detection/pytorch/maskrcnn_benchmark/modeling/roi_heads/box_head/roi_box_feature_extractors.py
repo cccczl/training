@@ -110,7 +110,7 @@ class FPNXconv1fcFeatureExtractor(nn.Module):
             sampling_ratio=sampling_ratio,
         )
         self.pooler = pooler
-        
+
         use_gn = cfg.MODEL.ROI_BOX_HEAD.USE_GN
         in_channels = cfg.MODEL.BACKBONE.OUT_CHANNELS
         conv_head_dim = cfg.MODEL.ROI_BOX_HEAD.CONV_HEAD_DIM
@@ -118,7 +118,7 @@ class FPNXconv1fcFeatureExtractor(nn.Module):
         dilation = cfg.MODEL.ROI_BOX_HEAD.DILATION
 
         xconvs = []
-        for ix in range(num_stacked_convs):
+        for _ in range(num_stacked_convs):
             xconvs.append(
                 nn.Conv2d(
                     in_channels,
@@ -127,9 +127,10 @@ class FPNXconv1fcFeatureExtractor(nn.Module):
                     stride=1,
                     padding=dilation,
                     dilation=dilation,
-                    bias=False if use_gn else True
+                    bias=not use_gn,
                 )
             )
+
             in_channels = conv_head_dim
             if use_gn:
                 xconvs.append(group_norm(in_channels))

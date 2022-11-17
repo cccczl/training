@@ -33,9 +33,9 @@ _BENCHMARK_NAME = "resnet"
 
 PREFIX = re.compile(_COMMON_PATTERN)
 DEFERRED_DECLARATION = re.compile(
-    "({} {} )([0-9\.]+)( .+)\"DEFERRED: ({})\"$".format(
-        _COMMON_PATTERN, _BENCHMARK_NAME, _UUID_PATTERN))
-DEFERRED_PREFIX = re.compile("{} \[({})\].+".format(_COMMON_PATTERN, _UUID_PATTERN))
+    f'({_COMMON_PATTERN} {_BENCHMARK_NAME} )([0-9\.]+)( .+)\"DEFERRED: ({_UUID_PATTERN})\"$'
+)
+DEFERRED_PREFIX = re.compile(f"{_COMMON_PATTERN} \[({_UUID_PATTERN})\].+")
 
 # Info is logged as [timestamp][value]
 DEFERRED_INFO_PATTERN = re.compile("^\[([0-9\.]+)\]\[([0-9\.e\-]+)\]")
@@ -61,8 +61,7 @@ def main():
       deferred_evaluations.append(line)
       continue
 
-    match = DEFERRED_DECLARATION.match(line)
-    if match:
+    if match := DEFERRED_DECLARATION.match(line):
       _, timestamp, _, key = match.groups()
       assert key not in deferred_declarations
       deferred_declarations[key] = (line, timestamp)
@@ -76,7 +75,7 @@ def main():
     key = match.groups()[0]
 
     # Strip off the id used for stitching
-    logged_eval_info = re.sub("{} \[{}\]".format(_COMMON_PATTERN, key), "", line)
+    logged_eval_info = re.sub(f"{_COMMON_PATTERN} \[{key}\]", "", line)
     # print(logged_eval_info, DEFERRED_INFO_PATTERN.match(logged_eval_info))
     eval_timestamp, eval_value = DEFERRED_INFO_PATTERN.match(logged_eval_info).groups()
     eval_value = float(eval_value)
@@ -86,9 +85,12 @@ def main():
 
     # We replace the graph construction time with the eval call time, and add
     # in the reported value
-    stitched_line = DEFERRED_DECLARATION.sub(
-        r'\g<1>{}\g<3>'.format(eval_timestamp), declaration_line) + \
-                    json.dumps({"value": eval_value, "deferred": True})
+    stitched_line = DEFERRED_DECLARATION.sub(f'\g<1>{eval_timestamp}\g<3>',
+                                             declaration_line) + json.dumps(
+                                                 {
+                                                     "value": eval_value,
+                                                     "deferred": True
+                                                 })
 
     # The stitched line can now be treated as an immediately logged line
     immediate_log_lines.append(stitched_line)

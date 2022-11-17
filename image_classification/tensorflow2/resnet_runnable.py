@@ -72,8 +72,8 @@ class ResnetRunnable(standard_runnable.StandardRunnableWithWarmup):
     batch_size = flags_obj.batch_size
     if batch_size % self.strategy.num_replicas_in_sync != 0:
       raise ValueError(
-          'Batch size must be divisible by number of replicas : {}'.format(
-              self.strategy.num_replicas_in_sync))
+          f'Batch size must be divisible by number of replicas : {self.strategy.num_replicas_in_sync}'
+      )
 
     steps_per_epoch, train_epochs = common.get_num_train_iterations(flags_obj)
     if train_epochs > 1:
@@ -104,10 +104,8 @@ class ResnetRunnable(standard_runnable.StandardRunnableWithWarmup):
         batch_size=flags_obj.batch_size,
         use_l2_regularizer=not flags_obj.single_l2_loss_op)
 
-    self.use_lars_optimizer = False
     self.num_accumulation_steps = self.flags_obj.num_accumulation_steps
-    if self.flags_obj.optimizer == 'LARS':
-      self.use_lars_optimizer = True
+    self.use_lars_optimizer = self.flags_obj.optimizer == 'LARS'
     self.optimizer, _ = common.get_optimizer(
         flags_obj=flags_obj,
         steps_per_epoch=steps_per_epoch,
@@ -131,11 +129,8 @@ class ResnetRunnable(standard_runnable.StandardRunnableWithWarmup):
           tf.train.experimental.enable_mixed_precision_graph_rewrite(
               self.optimizer, loss_scale))
 
-    self.one_hot = False
     self.label_smoothing = flags_obj.label_smoothing
-    if self.label_smoothing and self.label_smoothing > 0:
-      self.one_hot = True
-
+    self.one_hot = bool(self.label_smoothing and self.label_smoothing > 0)
     if flags_obj.report_accuracy_metrics:
       self.train_loss = tf.keras.metrics.Mean('train_loss', dtype=tf.float32)
       if self.one_hot:
@@ -168,8 +163,7 @@ class ResnetRunnable(standard_runnable.StandardRunnableWithWarmup):
     self.epoch_helper = utils.EpochHelper(steps_per_epoch, self.global_step)
 
     self.steps_per_loop = flags_obj.steps_per_loop
-    profile_steps = flags_obj.profile_steps
-    if profile_steps:
+    if profile_steps := flags_obj.profile_steps:
       profile_steps = [int(i) for i in profile_steps.split(',')]
       self.trace_start_step = profile_steps[0] if profile_steps[0] >= 0 else None
       self.trace_end_step = profile_steps[1]
@@ -183,15 +177,16 @@ class ResnetRunnable(standard_runnable.StandardRunnableWithWarmup):
     self.accum_grads_dtype = tf.float32
 
     if self.num_accumulation_steps > 1:
-      for var in self.training_vars:
-        self.accum_grads.append(self.optimizer.add_weight(
-            name=var.name + '_accum',
-            shape=var.shape,
-            dtype=self.accum_grads_dtype,
-            initializer='zeros',
-            trainable=False,
-            synchronization=tf.VariableSynchronization.ON_READ,
-            aggregation=tf.VariableAggregation.SUM))
+      self.accum_grads.extend(
+          self.optimizer.add_weight(
+              name=f'{var.name}_accum',
+              shape=var.shape,
+              dtype=self.accum_grads_dtype,
+              initializer='zeros',
+              trainable=False,
+              synchronization=tf.VariableSynchronization.ON_READ,
+              aggregation=tf.VariableAggregation.SUM,
+          ) for var in self.training_vars)
 
   def build_train_dataset(self):
     """See base class."""
@@ -253,8 +248,7 @@ class ResnetRunnable(standard_runnable.StandardRunnableWithWarmup):
     if self.trace_start_step:
       global_step = self.global_step.numpy()
       next_global_step = global_step + self.steps_per_loop
-      if (global_step <= self.trace_start_step and
-          self.trace_start_step < next_global_step):
+      if global_step <= self.trace_start_step < next_global_step:
         self.trace_start(global_step)
 
     self.time_callback.on_batch_begin(self.epoch_helper.batch_index)
@@ -304,7 +298,7 @@ class ResnetRunnable(standard_runnable.StandardRunnableWithWarmup):
       # Unscale the grads
       if self.flags_obj.dtype == 'fp16':
         grads = self.optimizer.get_unscaled_gradients(grads)
-      
+
       return logits, loss, grads
 
     def _maybe_apply_grads_and_clear(distribution):
@@ -376,8 +370,7 @@ class ResnetRunnable(standard_runnable.StandardRunnableWithWarmup):
     if self.trace_end_step:
       global_step = self.global_step.numpy()
       next_global_step = global_step + self.steps_per_loop
-      if (global_step <= self.trace_end_step and
-          self.trace_end_step < next_global_step):
+      if global_step <= self.trace_end_step < next_global_step:
         self.trace_end(global_step)
 
     self._epoch_end()

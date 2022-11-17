@@ -178,8 +178,7 @@ class KeypointRCNNLossComputation(object):
         N, K, H, W = keypoint_logits.shape
         keypoint_logits = keypoint_logits.view(N * K, H * W)
 
-        keypoint_loss = F.cross_entropy(keypoint_logits[valid], keypoint_targets[valid])
-        return keypoint_loss
+        return F.cross_entropy(keypoint_logits[valid], keypoint_targets[valid])
 
 
 def make_roi_keypoint_loss_evaluator(cfg):
@@ -192,5 +191,4 @@ def make_roi_keypoint_loss_evaluator(cfg):
         cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE, cfg.MODEL.ROI_HEADS.POSITIVE_FRACTION
     )
     resolution = cfg.MODEL.ROI_KEYPOINT_HEAD.RESOLUTION
-    loss_evaluator = KeypointRCNNLossComputation(matcher, fg_bg_sampler, resolution)
-    return loss_evaluator
+    return KeypointRCNNLossComputation(matcher, fg_bg_sampler, resolution)

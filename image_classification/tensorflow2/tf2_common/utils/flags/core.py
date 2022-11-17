@@ -123,10 +123,10 @@ def get_nondefault_flags_as_str():
   flag_strings = []
   for name, value in sorted(nondefault_flags.items()):
     if isinstance(value, bool):
-      flag_str = '--{}'.format(name) if value else '--no{}'.format(name)
+      flag_str = f'--{name}' if value else f'--no{name}'
     elif isinstance(value, list):
-      flag_str = '--{}={}'.format(name, ','.join(value))
+      flag_str = f"--{name}={','.join(value)}"
     else:
-      flag_str = '--{}={}'.format(name, value)
+      flag_str = f'--{name}={value}'
     flag_strings.append(flag_str)
   return ' '.join(shlex_quote(flag_str) for flag_str in flag_strings)

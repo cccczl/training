@@ -115,16 +115,15 @@ def define_base(data_dir=True, model_dir=True, clean=False, train_epochs=False,
 
   if hooks:
     # Construct a pretty summary of hooks.
-    hook_list_str = (
-        u"\ufeff  Hook:\n" + u"\n".join([u"\ufeff    {}".format(key) for key
-                                         in hooks_helper.HOOKS]))
+    hook_list_str = u"\ufeff  Hook:\n" + u"\n".join(
+        [f"\ufeff    {key}" for key in hooks_helper.HOOKS])
     flags.DEFINE_list(
-        name="hooks", short_name="hk", default="LoggingTensorHook",
+        name="hooks",
+        short_name="hk",
+        default="LoggingTensorHook",
         help=help_wrap(
-            u"A list of (case insensitive) strings to specify the names of "
-            u"training hooks.\n{}\n\ufeff  Example: `--hooks ProfilerHook,"
-            u"ExamplesPerSecondHook`\n See official.utils.logs.hooks_helper "
-            u"for details.".format(hook_list_str))
+            f"A list of (case insensitive) strings to specify the names of training hooks.\n{hook_list_str}\n\ufeff  Example: `--hooks ProfilerHook,ExamplesPerSecondHook`\n See official.utils.logs.hooks_helper for details."
+        ),
     )
     key_flags.append("hooks")
 
@@ -160,4 +159,4 @@ def get_num_gpus(flags_obj):
 
   from tensorflow.python.client import device_lib  # pylint: disable=g-import-not-at-top
   local_device_protos = device_lib.list_local_devices()
-  return sum([1 for d in local_device_protos if d.device_type == "GPU"])
+  return sum(d.device_type == "GPU" for d in local_device_protos)

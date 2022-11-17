@@ -47,7 +47,7 @@ def get_loss_scale(flags_obj, default_for_fp16):
     return flags_obj.loss_scale
   elif flags_obj.loss_scale is not None:
     return float(flags_obj.loss_scale)
-  elif flags_obj.dtype == "fp32" or flags_obj.dtype == "bf16":
+  elif flags_obj.dtype in ["fp32", "bf16"]:
     return 1  # No loss scaling is needed for fp32 and bf16
   else:
     assert flags_obj.dtype == "fp16"

@@ -60,11 +60,11 @@ def extract_valid_flags(subprocess_cmd):
     help_cmd = subprocess_cmd + ['--helpfull']
     help_output = subprocess.run(help_cmd, stdout=subprocess.PIPE).stdout
     help_output = help_output.decode('ascii')
-    if 'python' in subprocess_cmd[0]:
-        valid_flags = parse_helpfull_output(help_output)
-    else:
-        valid_flags = parse_helpfull_output(help_output, regex=FLAG_HELP_RE_CC)
-    return valid_flags
+    return (
+        parse_helpfull_output(help_output)
+        if 'python' in subprocess_cmd[0]
+        else parse_helpfull_output(help_output, regex=FLAG_HELP_RE_CC)
+    )
 
 
 def parse_helpfull_output(help_output, regex=FLAG_HELP_RE_PY):
@@ -78,9 +78,9 @@ def parse_helpfull_output(help_output, regex=FLAG_HELP_RE_PY):
     """
     valid_flags = set()
     for _, no_prefix, flag_name in regex.findall(help_output):
-        valid_flags.add('--' + flag_name)
+        valid_flags.add(f'--{flag_name}')
         if no_prefix:
-            valid_flags.add('--no' + flag_name)
+            valid_flags.add(f'--no{flag_name}')
     return valid_flags
 
 

@@ -65,11 +65,11 @@ def _parse(msg):
 
 
 def _print_msg(result, msg_id, msg):
-    msg_id = " {}".format(msg_id) if msg_id else ""
+    msg_id = f" {msg_id}" if msg_id else ""
     if isinstance(msg, bool):
         msg = "true" if msg else "false"
-    msg = " {}".format(msg) if msg else ""
-    print("{}{}{}\n".format(result, msg_id, msg), flush=True)
+    msg = f" {msg}" if msg else ""
+    print(f"{result}{msg_id}{msg}\n", flush=True)
 
 
 def _print_error(msg_id, msg):
@@ -83,7 +83,7 @@ def _print_success(msg_id, msg):
 
 
 def _handler_name(fn):
-    return "{}.{}".format(fn.__self__.__class__.__name__, fn.__name__)
+    return f"{fn.__self__.__class__.__name__}.{fn.__name__}"
 
 
 def _convert_args(handler, args):
@@ -145,9 +145,11 @@ class Engine(object):
                 cmd = field[4:]
                 fn = getattr(handler_obj, field)
                 if cmd in self.cmds:
-                    print('Replacing {} with {}'.format(
-                        _handler_name(self.cmds[cmd]), _handler_name(fn)),
-                        file=sys.stderr)
+                    print(
+                        f'Replacing {_handler_name(self.cmds[cmd])} with {_handler_name(fn)}',
+                        file=sys.stderr,
+                    )
+
                 self.cmds[cmd] = fn
 
     def handle_msg(self, msg):

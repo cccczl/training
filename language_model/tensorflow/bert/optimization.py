@@ -54,8 +54,9 @@ def create_optimizer(loss,
   # num_warmup_steps, the learning rate will be
   # `(global_step - start_warmup_step)/num_warmup_steps * init_lr`.
   if num_warmup_steps:
-    tf.logging.info("++++++ warmup starts at step " + str(start_warmup_step)
-                    + ", for " + str(num_warmup_steps) + " steps ++++++")
+    tf.logging.info(
+        f"++++++ warmup starts at step {str(start_warmup_step)}, for {str(num_warmup_steps)} steps ++++++"
+    )
     global_steps_int = tf.cast(global_step, tf.int32)
     start_warm_int = tf.constant(start_warmup_step, dtype=tf.int32)
     global_steps_int = global_steps_int - start_warm_int
@@ -160,17 +161,19 @@ class AdamWeightDecayOptimizer(tf.train.Optimizer):
       param_name = self._get_variable_name(param.name)
 
       m = tf.get_variable(
-          name=param_name + "/adam_m",
+          name=f"{param_name}/adam_m",
           shape=param.shape.as_list(),
           dtype=tf.float32,
           trainable=False,
-          initializer=tf.zeros_initializer())
+          initializer=tf.zeros_initializer(),
+      )
       v = tf.get_variable(
-          name=param_name + "/adam_v",
+          name=f"{param_name}/adam_v",
           shape=param.shape.as_list(),
           dtype=tf.float32,
           trainable=False,
-          initializer=tf.zeros_initializer())
+          initializer=tf.zeros_initializer(),
+      )
 
       # Standard Adam update.
       next_m = (
@@ -215,5 +218,5 @@ class AdamWeightDecayOptimizer(tf.train.Optimizer):
     """Get the variable name from the tensor name."""
     m = re.match("^(.*):\\d+$", param_name)
     if m is not None:
-      param_name = m.group(1)
+      param_name = m[1]
     return param_name

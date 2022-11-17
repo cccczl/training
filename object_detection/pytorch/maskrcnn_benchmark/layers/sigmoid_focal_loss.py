@@ -28,10 +28,9 @@ class _SigmoidFocalLoss(Function):
         ctx.gamma = gamma
         ctx.alpha = alpha
 
-        losses = _C.sigmoid_focalloss_forward(
+        return _C.sigmoid_focalloss_forward(
             logits, targets, num_classes, gamma, alpha
         )
-        return losses
 
     @staticmethod
     @once_differentiable
@@ -82,8 +81,8 @@ class SigmoidFocalLoss(nn.Module):
         return loss.sum()
 
     def __repr__(self):
-        tmpstr = self.__class__.__name__ + "("
-        tmpstr += "gamma=" + str(self.gamma)
-        tmpstr += ", alpha=" + str(self.alpha)
+        tmpstr = f"{self.__class__.__name__}("
+        tmpstr += f"gamma={str(self.gamma)}"
+        tmpstr += f", alpha={str(self.alpha)}"
         tmpstr += ")"
         return tmpstr

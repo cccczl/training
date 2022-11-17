@@ -57,8 +57,10 @@ def eval_policy(eval_positions):
     idx_start = FLAGS.idx_start
     eval_every = FLAGS.eval_every
 
-    print("Evaluating models {}-{}, eval_every={}".format(
-          idx_start, len(model_paths), eval_every))
+    print(
+        f"Evaluating models {idx_start}-{len(model_paths)}, eval_every={eval_every}"
+    )
+
 
     player = None
     for i, idx in enumerate(tqdm(range(idx_start, len(model_paths), eval_every))):
@@ -77,12 +79,10 @@ def eval_policy(eval_positions):
         eval_probs, eval_values = player.network.run_many(positions)
 
         for pos_name, probs, value in zip(pos_names, eval_probs, eval_values):
-            save_file = os.path.join(
-                FLAGS.data_dir, "heatmap-{}-{}.csv".format(pos_name, idx))
+            save_file = os.path.join(FLAGS.data_dir, f"heatmap-{pos_name}-{idx}.csv")
 
             with open(save_file, "w") as data:
-                data.write("{},  {},  {}\n".format(
-                    idx, value, ",".join(map(str, probs))))
+                data.write(f'{idx},  {value},  {",".join(map(str, probs))}\n')
 
 
 def positions_from_sgfs(sgf_files, include_empty=True):

@@ -18,7 +18,7 @@ def process_performance_stats(timestamps, batch_size, mode):
     stats = {f"throughput_{mode}": throughput_imgps,
              f"latency_{mode}_mean": timestamps_ms.mean()}
     for level in [90, 95, 99]:
-        stats.update({f"latency_{mode}_{level}": np.percentile(timestamps_ms, level)})
+        stats[f"latency_{mode}_{level}"] = np.percentile(timestamps_ms, level)
 
     return stats
 

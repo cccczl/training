@@ -26,17 +26,13 @@ import torch.distributed as dist
 def get_world_size():
     if not dist.is_available():
         return 1
-    if not dist.is_initialized():
-        return 1
-    return dist.get_world_size()
+    return dist.get_world_size() if dist.is_initialized() else 1
 
 
 def get_rank():
     if not dist.is_available():
         return 0
-    if not dist.is_initialized():
-        return 0
-    return dist.get_rank()
+    return dist.get_rank() if dist.is_initialized() else 0
 
 
 def is_main_process():
@@ -85,9 +81,10 @@ def all_gather(data):
     # receiving Tensor from all ranks
     # we pad the tensor because torch all_gather does not support
     # gathering tensors of different shapes
-    tensor_list = []
-    for _ in size_list:
-        tensor_list.append(torch.ByteTensor(size=(max_size,)).to("cuda"))
+    tensor_list = [
+        torch.ByteTensor(size=(max_size,)).to("cuda") for _ in size_list
+    ]
+
     if local_size != max_size:
         padding = torch.ByteTensor(size=(max_size - local_size,)).to("cuda")
         tensor = torch.cat((tensor, padding), dim=0)
@@ -126,5 +123,5 @@ def reduce_dict(input_dict, average=True):
             # only main process gets accumulated, so only divide by
             # world_size in this case
             values /= world_size
-        reduced_dict = {k: v for k, v in zip(names, values)}
+        reduced_dict = dict(zip(names, values))
     return reduced_dict

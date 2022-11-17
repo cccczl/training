@@ -75,9 +75,7 @@ def mlperf_submission_log():
         key=mllog.constants.SUBMISSION_STATUS,
         value='onprem')
 
-    mllog_event(
-        key=mllog.constants.SUBMISSION_PLATFORM,
-        value=f'your_platform')
+    mllog_event(key=mllog.constants.SUBMISSION_PLATFORM, value='your_platform')
 
 
 def mlperf_run_param_log(flags):

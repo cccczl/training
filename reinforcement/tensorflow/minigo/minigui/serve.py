@@ -93,14 +93,14 @@ class Connection(object):
         self.process.stdin.flush()
 
     def _process_line_locked(self, stream_name, line):
-        while line and (line[-1] == "\n" or line[-1] == "\r"):
+        while line and line[-1] in ["\n", "\r"]:
             line = line[:-1]
 
         if self._echo_streams:
             if stream_name == "stderr" and line.startswith("mg-"):
                 self._echo_streams = False
             else:
-                print("%s(%s): %s" % (self.name, stream_name, line))
+                print(f"{self.name}({stream_name}): {line}")
 
         if line.startswith("= __NEW_TOKEN__ "):
             self._gtp_token = line.split(" ", 3)[2]
@@ -116,18 +116,18 @@ def stderr_thread(connection):
             connection.signal_gtp_cmd_done()
             continue
         connection.process_line("stderr", line)
-    print("%s: stderr thread died" % connection.name)
+    print(f"{connection.name}: stderr thread died")
 
 
 def stdout_thread(connection):
     for line in connection.process.stdout:
         line = line.decode()
-        if line[0] == "=" or line[0] == "?":
+        if line[0] in ["=", "?"]:
             # We just read the result of a GTP command, Wait for all lines
             # written to stderr while processing that command to be read.
             connection.wait_for_gtp_cmd_done()
         connection.process_line("stdout", line)
-    print("%s: stdout thread died" % connection.name)
+    print(f"{connection.name}: stdout thread died")
 
 
 @socketio.on("gtpcmd", namespace="/minigui")
@@ -140,7 +140,7 @@ def stdin_cmd(message):
         print("Unknown player \"%s\"" % player_name)
         return
 
-    print("%s(stdin): %s" % (player_name, data))
+    print(f"{player_name}(stdin): {data}")
     connection.write(data)
 
 

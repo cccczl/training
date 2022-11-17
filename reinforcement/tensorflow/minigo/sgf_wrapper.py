@@ -44,7 +44,7 @@ def translate_sgf_move(player_move, comment):
     color = 'B' if player_move.color == go.BLACK else 'W'
     if comment is not None:
         comment = comment.replace(']', r'\]')
-        comment_node = "C[{}]".format(comment)
+        comment_node = f"C[{comment}]"
     else:
         comment_node = ""
     return ";{color}[{coords}]{comment_node}".format(
@@ -80,10 +80,7 @@ def sgf_prop(value_list):
     'Converts raw sgf library output to sensible value'
     if value_list is None:
         return None
-    if len(value_list) == 1:
-        return value_list[0]
-    else:
-        return value_list
+    return value_list[0] if len(value_list) == 1 else value_list
 
 
 def sgf_prop_get(props, key, default):
@@ -114,9 +111,15 @@ def add_stones(pos, black_stones_added, white_stones_added):
     working_board = np.copy(pos.board)
     go.place_stones(working_board, go.BLACK, black_stones_added)
     go.place_stones(working_board, go.WHITE, white_stones_added)
-    new_position = Position(board=working_board, n=pos.n, komi=pos.komi,
-                            caps=pos.caps, ko=pos.ko, recent=pos.recent, to_play=pos.to_play)
-    return new_position
+    return Position(
+        board=working_board,
+        n=pos.n,
+        komi=pos.komi,
+        caps=pos.caps,
+        ko=pos.ko,
+        recent=pos.recent,
+        to_play=pos.to_play,
+    )
 
 
 def get_next_move(node):
@@ -128,8 +131,12 @@ def get_next_move(node):
 
 
 def maybe_correct_next(pos, next_node):
-    if (('B' in next_node.properties and not pos.to_play == go.BLACK) or
-            ('W' in next_node.properties and not pos.to_play == go.WHITE)):
+    if (
+        'B' in next_node.properties
+        and pos.to_play != go.BLACK
+        or 'W' in next_node.properties
+        and pos.to_play != go.WHITE
+    ):
         pos.flip_playerturn(mutate=True)
 
 
@@ -155,9 +162,7 @@ def replay_sgf(sgf_contents):
     props = root_node.properties
     assert int(sgf_prop(props.get('GM', ['1']))) == 1, "Not a Go SGF!"
 
-    komi = 0
-    if props.get('KM') is not None:
-        komi = float(sgf_prop(props.get('KM')))
+    komi = float(sgf_prop(props.get('KM'))) if props.get('KM') is not None else 0
     result = utils.parse_game_result(sgf_prop(props.get('RE', '')))
 
     pos = Position(komi=komi)
@@ -172,5 +177,4 @@ def replay_sgf(sgf_contents):
 
 def replay_sgf_file(sgf_file):
     with open(sgf_file) as f:
-        for pwc in replay_sgf(f.read()):
-            yield pwc
+        yield from replay_sgf(f.read())

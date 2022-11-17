@@ -20,6 +20,7 @@ the registry in HOOKS, 2) add a corresponding function that parses out necessary
 parameters.
 """
 
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -29,9 +30,10 @@ import tensorflow as tf  # pylint: disable=g-bad-import-order
 from official.utils.logs import hooks
 from official.utils.logs import metric_hook
 
-_TENSORS_TO_LOG = dict((x, x) for x in ['learning_rate',
-                                        'cross_entropy',
-                                        'train_accuracy'])
+_TENSORS_TO_LOG = {
+    x: x
+    for x in ['learning_rate', 'cross_entropy', 'train_accuracy']
+}
 
 
 def get_train_hooks(name_list, **kwargs):
@@ -57,7 +59,7 @@ def get_train_hooks(name_list, **kwargs):
   for name in name_list:
     hook_name = HOOKS.get(name.strip().lower())
     if hook_name is None:
-      raise ValueError('Unrecognized training hook requested: {}'.format(name))
+      raise ValueError(f'Unrecognized training hook requested: {name}')
     else:
       train_hooks.append(hook_name(**kwargs))
 

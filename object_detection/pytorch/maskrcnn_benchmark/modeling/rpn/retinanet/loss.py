@@ -94,8 +94,7 @@ class RetinaNetLossComputation(RPNLossComputation):
 
 
 def generate_retinanet_labels(matched_targets):
-    labels_per_image = matched_targets.get_field("labels")
-    return labels_per_image
+    return matched_targets.get_field("labels")
 
 
 def make_retinanet_loss_evaluator(cfg, box_coder):
@@ -109,12 +108,11 @@ def make_retinanet_loss_evaluator(cfg, box_coder):
         cfg.MODEL.RETINANET.LOSS_ALPHA
     )
 
-    loss_evaluator = RetinaNetLossComputation(
+    return RetinaNetLossComputation(
         matcher,
         box_coder,
         generate_retinanet_labels,
         sigmoid_focal_loss,
-        bbox_reg_beta = cfg.MODEL.RETINANET.BBOX_REG_BETA,
-        regress_norm = cfg.MODEL.RETINANET.BBOX_REG_WEIGHT,
+        bbox_reg_beta=cfg.MODEL.RETINANET.BBOX_REG_BETA,
+        regress_norm=cfg.MODEL.RETINANET.BBOX_REG_WEIGHT,
     )
-    return loss_evaluator

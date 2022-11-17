@@ -53,7 +53,7 @@ def get_caller(stack_index=2, root_dir=None):
   # Trim the filenames for readability.
   filename = caller.filename
   if root_dir is not None:
-    filename = re.sub('^' + root_dir + '/', '', filename)
+    filename = re.sub(f'^{root_dir}/', '', filename)
   return (filename, caller.lineno)
 
 # :::MLL 1556733699.71 run_start: {"value": null,
@@ -72,8 +72,7 @@ def mlperf_format(key, value, stack_offset=0, metadata=None):
     metadata['file'] = filename
 
   now = time.time()
-  msg = LOG_TEMPLATE.format(now, key, json.dumps(value), json.dumps(metadata))
-  return msg
+  return LOG_TEMPLATE.format(now, key, json.dumps(value), json.dumps(metadata))
 
 
 def mlperf_print(key, value, stack_offset=0, metadata=None):

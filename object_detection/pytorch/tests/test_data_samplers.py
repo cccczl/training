@@ -39,7 +39,7 @@ class SubsetSampler(Sampler):
 class TestGroupedBatchSampler(unittest.TestCase):
     def test_respect_order_simple(self):
         drop_uneven = False
-        dataset = [i for i in range(40)]
+        dataset = list(range(40))
         group_ids = [i // 10 for i in dataset]
         sampler = SequentialSampler(dataset)
         for batch_size in [1, 3, 5, 6]:
@@ -52,7 +52,7 @@ class TestGroupedBatchSampler(unittest.TestCase):
 
     def test_respect_order(self):
         drop_uneven = False
-        dataset = [i for i in range(10)]
+        dataset = list(range(10))
         group_ids = [0, 0, 1, 0, 1, 1, 0, 1, 1, 0]
         sampler = SequentialSampler(dataset)
 
@@ -72,7 +72,7 @@ class TestGroupedBatchSampler(unittest.TestCase):
     def test_respect_order_drop_uneven(self):
         batch_size = 3
         drop_uneven = True
-        dataset = [i for i in range(10)]
+        dataset = list(range(10))
         group_ids = [0, 0, 1, 0, 1, 1, 0, 1, 1, 0]
         sampler = SequentialSampler(dataset)
         batch_sampler = GroupedBatchSampler(sampler, group_ids, batch_size, drop_uneven)
@@ -85,7 +85,7 @@ class TestGroupedBatchSampler(unittest.TestCase):
     def test_subset_sampler(self):
         batch_size = 3
         drop_uneven = False
-        dataset = [i for i in range(10)]
+        dataset = list(range(10))
         group_ids = [0, 0, 1, 0, 1, 1, 0, 1, 1, 0]
         sampler = SubsetSampler([0, 3, 5, 6, 7, 8])
 
@@ -98,7 +98,7 @@ class TestGroupedBatchSampler(unittest.TestCase):
     def test_permute_subset_sampler(self):
         batch_size = 3
         drop_uneven = False
-        dataset = [i for i in range(10)]
+        dataset = list(range(10))
         group_ids = [0, 0, 1, 0, 1, 1, 0, 1, 1, 0]
         sampler = SubsetSampler([5, 0, 6, 1, 3, 8])
 
@@ -111,7 +111,7 @@ class TestGroupedBatchSampler(unittest.TestCase):
     def test_permute_subset_sampler_drop_uneven(self):
         batch_size = 3
         drop_uneven = True
-        dataset = [i for i in range(10)]
+        dataset = list(range(10))
         group_ids = [0, 0, 1, 0, 1, 1, 0, 1, 1, 0]
         sampler = SubsetSampler([5, 0, 6, 1, 3, 8])
 
@@ -124,7 +124,7 @@ class TestGroupedBatchSampler(unittest.TestCase):
     def test_len(self):
         batch_size = 3
         drop_uneven = True
-        dataset = [i for i in range(10)]
+        dataset = list(range(10))
         group_ids = [random.randint(0, 1) for _ in dataset]
         sampler = RandomSampler(dataset)
 
@@ -145,7 +145,7 @@ class TestIterationBasedBatchSampler(unittest.TestCase):
         for batch_size in [2, 3, 4]:
             for num_iterations in [4, 10, 20]:
                 for drop_last in [False, True]:
-                    dataset = [i for i in range(10)]
+                    dataset = list(range(10))
                     sampler = SequentialSampler(dataset)
                     batch_sampler = BatchSampler(
                         sampler, batch_size, drop_last=drop_last
@@ -158,7 +158,7 @@ class TestIterationBasedBatchSampler(unittest.TestCase):
                     for i, batch in enumerate(iter_sampler):
                         start = (i % len(batch_sampler)) * batch_size
                         end = min(start + batch_size, len(dataset))
-                        expected = [x for x in range(start, end)]
+                        expected = list(range(start, end))
                         self.assertEqual(batch, expected)
 
 

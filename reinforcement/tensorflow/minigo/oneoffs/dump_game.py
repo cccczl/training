@@ -43,29 +43,23 @@ def main(argv):
     contents = f.read()
     f.close()
 
-    # Determine the board size before importing any Minigo libraries because
-    # require that the BOARD_SIZE environment variable is set correctly before
-    # import.
-    m = re.search(r'SZ\[([^]]+)', contents)
-    if not m:
+    if m := re.search(r'SZ\[([^]]+)', contents):
+        board_size = int(m[1])
+
+    else:
         print('Couldn\'t find SZ node, assuming 19x19 board')
         board_size = 19
-    else:
-        board_size = int(m.group(1))
+    if m := re.search(r'RE\[([^]]+)', contents):
+        result = m[1]
 
-    m = re.search(r'RE\[([^]]+)', contents)
-    if not m:
+    else:
         print('No game result found')
-    else:
-        result = m.group(1)
+    if m := re.search(r'PB\[([^]]+)', contents):
+        player = m[1]
 
-    m = re.search(r'PB\[([^]]+)', contents)
-    if not m:
+    else:
         print('Couldn\'t find PB node')
         player='unknown'
-    else:
-        player = m.group(1)
-
     # Set the board size and import the Minigo libs.
     os.environ['BOARD_SIZE'] = str(board_size)
     import coords
@@ -75,8 +69,7 @@ def main(argv):
     # Replay the game.
     for x in sgf_wrapper.replay_sgf(contents):
         to_play = 'B' if x.position.to_play == 1 else 'W'
-        print('{}>> {}: {}\n'.format(
-            x.position, to_play, coords.to_gtp(x.next_move)))
+        print(f'{x.position}>> {to_play}: {coords.to_gtp(x.next_move)}\n')
         time.sleep(FLAGS.sleep_time)
 
     print(result)

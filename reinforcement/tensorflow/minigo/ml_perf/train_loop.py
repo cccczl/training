@@ -94,8 +94,7 @@ class State:
 
     @property
     def selfplay_model_path(self):
-        return '{}.pb'.format(
-            os.path.join(FLAGS.model_dir, self.selfplay_model_name))
+        return f'{os.path.join(FLAGS.model_dir, self.selfplay_model_name)}.pb'
 
     @property
     def train_model_name(self):
@@ -103,8 +102,7 @@ class State:
 
     @property
     def train_model_path(self):
-        return '{}.pb'.format(
-            os.path.join(FLAGS.model_dir, self.train_model_name))
+        return f'{os.path.join(FLAGS.model_dir, self.train_model_name)}.pb'
 
 
 def wait_for_training_examples(state, num_games):
@@ -166,27 +164,39 @@ def sample_training_examples(state):
     src_patterns = [os.path.join(x, '*', '*', '*.tfrecord.zz')
                     for x in model_dirs]
 
-    dst_path = os.path.join(FLAGS.golden_chunk_dir,
-                            '{}.tfrecord.zz'.format(state.train_model_name))
+    dst_path = os.path.join(
+        FLAGS.golden_chunk_dir, f'{state.train_model_name}.tfrecord.zz'
+    )
+
 
     logging.info('Writing training chunks to %s', dst_path)
-    output = wait(checked_run([
-        'bazel-bin/cc/sample_records',
-        '--num_read_threads={}'.format(FLAGS.num_read_threads),
-        '--num_write_threads={}'.format(FLAGS.num_write_threads),
-        '--files_per_pattern={}'.format(FLAGS.min_games_per_iteration),
-        '--sample_frac={}'.format(FLAGS.train_filter),
-        '--compression=1',
-        '--shuffle=true',
-        '--dst={}'.format(dst_path)] + src_patterns))
+    output = wait(
+        checked_run(
+            (
+                [
+                    'bazel-bin/cc/sample_records',
+                    f'--num_read_threads={FLAGS.num_read_threads}',
+                    f'--num_write_threads={FLAGS.num_write_threads}',
+                    f'--files_per_pattern={FLAGS.min_games_per_iteration}',
+                    f'--sample_frac={FLAGS.train_filter}',
+                    '--compression=1',
+                    '--shuffle=true',
+                    f'--dst={dst_path}',
+                ]
+                + src_patterns
+            )
+        )
+    )
+
 
     m = re.search(r"sampled ([\d]+) records", output)
     assert m
-    num_examples = int(m.group(1))
+    num_examples = int(m[1])
 
     chunk_pattern = os.path.join(
-        FLAGS.golden_chunk_dir,
-        '{}-*-of-*.tfrecord.zz'.format(state.train_model_name))
+        FLAGS.golden_chunk_dir, f'{state.train_model_name}-*-of-*.tfrecord.zz'
+    )
+
     chunk_paths = sorted(tf.gfile.Glob(chunk_pattern))
     assert len(chunk_paths) == FLAGS.num_write_threads
 
@@ -219,15 +229,25 @@ def train(state):
 
     model_path = os.path.join(FLAGS.model_dir, state.train_model_name)
 
-    wait(checked_run([
-        'python3', 'train.py',
-        '--flagfile={}'.format(os.path.join(FLAGS.flags_dir, 'train.flags')),
-        '--work_dir={}'.format(FLAGS.work_dir),
-        '--export_path={}'.format(model_path),
-        '--use_tpu={}'.format('true' if FLAGS.tpu_name else 'false'),
-        '--tpu_name={}'.format(FLAGS.tpu_name),
-        '--num_examples={}'.format(num_examples),
-        '--freeze=true'] + record_paths))
+    wait(
+        checked_run(
+            (
+                [
+                    'python3',
+                    'train.py',
+                    f"--flagfile={os.path.join(FLAGS.flags_dir, 'train.flags')}",
+                    f'--work_dir={FLAGS.work_dir}',
+                    f'--export_path={model_path}',
+                    f"--use_tpu={'true' if FLAGS.tpu_name else 'false'}",
+                    f'--tpu_name={FLAGS.tpu_name}',
+                    f'--num_examples={num_examples}',
+                    '--freeze=true',
+                ]
+                + record_paths
+            )
+        )
+    )
+
 
     # Append the time elapsed from when the RL was started to when this model
     # was trained.
@@ -244,13 +264,22 @@ def train(state):
 def validate(state):
     src_dirs = list_selfplay_dirs(FLAGS.holdout_dir)[:FLAGS.window_size]
 
-    wait(checked_run([
-        'python3', 'validate.py',
-        '--flagfile={}'.format(os.path.join(FLAGS.flags_dir, 'validate.flags')),
-        '--work_dir={}'.format(FLAGS.work_dir),
-        '--use_tpu={}'.format('true' if FLAGS.tpu_name else 'false'),
-        '--tpu_name={}'.format(FLAGS.tpu_name),
-        '--expand_validation_dirs'] + src_dirs))
+    wait(
+        checked_run(
+            (
+                [
+                    'python3',
+                    'validate.py',
+                    f"--flagfile={os.path.join(FLAGS.flags_dir, 'validate.flags')}",
+                    f'--work_dir={FLAGS.work_dir}',
+                    f"--use_tpu={'true' if FLAGS.tpu_name else 'false'}",
+                    f'--tpu_name={FLAGS.tpu_name}',
+                    '--expand_validation_dirs',
+                ]
+                + src_dirs
+            )
+        )
+    )
 
 
 def main(unused_argv):

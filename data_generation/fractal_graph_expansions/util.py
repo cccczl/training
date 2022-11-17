@@ -72,9 +72,7 @@ def savez_two_column(matrix, row_offset, file_name, append=False):
   tc = []
   for u, items in enumerate(matrix):
     user = row_offset + u
-    for item in items:
-      tc.append([user, item])
-  
+    tc.extend([user, item] for item in items)
   np.savez_compressed(file_name, np.asarray(tc))
   logging.info("Done saving to file %s.", file_name)
 

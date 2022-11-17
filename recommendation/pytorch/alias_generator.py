@@ -183,9 +183,7 @@ class AliasSample(object):
         # Finally, select uniformly from the chosen region
         chosen_lookup_ind = sample_offsets + chosen_region
         lookup_offsets = self.slightly_biased_randint(self.region_cardinality[chosen_lookup_ind])
-        chosen_items = self.region_starts[chosen_lookup_ind] + lookup_offsets
-
-        return chosen_items
+        return self.region_starts[chosen_lookup_ind] + lookup_offsets
 
 
 def process_data(num_items, min_items_per_user, iter_fn):
@@ -223,7 +221,7 @@ def process_data(num_items, min_items_per_user, iter_fn):
         alias_split_p.append(user_alias_split_p)
 
         if user_id % 10000 == 0:
-            print("user id {} processed".format(user_id))
+            print(f"user id {user_id} processed")
 
     return AliasSample(
         offsets=np.cumsum([0] + num_regions, dtype=np.int32)[:-1],
@@ -243,8 +241,7 @@ def make_synthetic_data(num_users, num_items, approx_items_per_user):
         output.append(items)
 
     def iter_fn():
-        for i in output:
-            yield i
+        yield from output
 
     return iter_fn
 
@@ -308,34 +305,39 @@ def test_using_synthetic():
 
 
 def iter_data():
-    shards = sorted([i for i in os.listdir(os.getcwd())
-                     if i.startswith(_PREFIX + "_train.")])
+    shards = sorted(
+        [
+            i
+            for i in os.listdir(os.getcwd())
+            if i.startswith(f"{_PREFIX}_train.")
+        ]
+    )
+
 
     for shard in shards:
         print(shard)
         with open(shard, "rb") as f:
-            for i, data in enumerate(pickle.load(f)):
-                yield data
+            yield from pickle.load(f)
 
 
 def run_real_data():
     print("Starting on real data.")
-    metadata_path = "{}_train_metadata.pkl".format(_PREFIX)
+    metadata_path = f"{_PREFIX}_train_metadata.pkl"
     with Open(metadata_path, "rb") as f:
         train_metadata = pickle.load(f)
     num_items = train_metadata.num_cols
     print("num_items:", num_items)
 
     st = timeit.default_timer()
-    sampler_cache = _PREFIX + "cached_sampler.pkl"
+    sampler_cache = f"{_PREFIX}cached_sampler.pkl"
     if os.path.exists(sampler_cache):
-      print("Using cache: {}".format(sampler_cache))
-      with open(sampler_cache, "rb") as f:
-        sampler, pos_users, pos_items = pickle.load(f)
+        print(f"Using cache: {sampler_cache}")
+        with open(sampler_cache, "rb") as f:
+          sampler, pos_users, pos_items = pickle.load(f)
     else:
-      sampler, pos_users, pos_items = process_data(num_items=num_items, min_items_per_user=1, iter_fn=iter_data)
-      with open(sampler_cache, "wb") as f:
-        pickle.dump([sampler, pos_users, pos_items], f, pickle.HIGHEST_PROTOCOL)
+        sampler, pos_users, pos_items = process_data(num_items=num_items, min_items_per_user=1, iter_fn=iter_data)
+        with open(sampler_cache, "wb") as f:
+          pickle.dump([sampler, pos_users, pos_items], f, pickle.HIGHEST_PROTOCOL)
     preproc_time = timeit.default_timer() - st
     num_users = len(sampler.num_regions)
     print("num_users:", num_users)

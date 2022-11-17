@@ -155,7 +155,4 @@ def build_rpn(cfg):
     """
     This gives the gist of it. Not super important because it doesn't change as much
     """
-    if cfg.MODEL.RETINANET_ON:
-        return build_retinanet(cfg)
-
-    return RPNModule(cfg)
+    return build_retinanet(cfg) if cfg.MODEL.RETINANET_ON else RPNModule(cfg)

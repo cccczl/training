@@ -203,9 +203,10 @@ def get_optimizer(flags_obj,
           batch_size=flags_obj.batch_size,
           steps_per_epoch=steps_per_epoch,
           warmup_epochs=LR_SCHEDULE[0][1],
-          boundaries=list(p[1] for p in LR_SCHEDULE[1:]),
-          multipliers=list(p[0] for p in LR_SCHEDULE),
-          compute_lr_on_cpu=True)
+          boundaries=[p[1] for p in LR_SCHEDULE[1:]],
+          multipliers=[p[0] for p in LR_SCHEDULE],
+          compute_lr_on_cpu=True,
+      )
     elif flags_obj.lr_schedule == 'constant':
       lr_schedule = flags_obj.base_learning_rate * flags_obj.batch_size / 256
     else:
@@ -218,8 +219,7 @@ def get_optimizer(flags_obj,
           learning_rate=lr_schedule, momentum=FLAGS.momentum)
 
     elif flags_obj.optimizer == 'LARS':
-      use_experimental_compile = True if tf.config.list_physical_devices(
-          'GPU') else False
+      use_experimental_compile = bool(tf.config.list_physical_devices('GPU'))
 
       optimizer = lars_optimizer.LARSOptimizer(
           learning_rate=lr_schedule,
@@ -227,7 +227,7 @@ def get_optimizer(flags_obj,
           weight_decay=flags_obj.weight_decay,
           skip_list=['batch_normalization', 'bias', 'bn'],
           epsilon=flags_obj.lars_epsilon)
-          # use_experimental_compile=use_experimental_compile)
+              # use_experimental_compile=use_experimental_compile)
 
     learning_rate_schedule_fn = learning_rate_schedule
 
@@ -286,12 +286,11 @@ def get_callbacks(
       callbacks.append(tfmot.sparsity.keras.PruningSummaries(
           log_dir=model_dir, profile_batch=0))
 
-  if enable_checkpoint_and_export:
-    if model_dir is not None:
-      ckpt_full_path = os.path.join(model_dir, 'model.ckpt-{epoch:04d}')
-      callbacks.append(
-          tf.keras.callbacks.ModelCheckpoint(ckpt_full_path,
-                                             save_weights_only=True))
+  if enable_checkpoint_and_export and model_dir is not None:
+    ckpt_full_path = os.path.join(model_dir, 'model.ckpt-{epoch:04d}')
+    callbacks.append(
+        tf.keras.callbacks.ModelCheckpoint(ckpt_full_path,
+                                           save_weights_only=True))
   return callbacks
 
 
@@ -606,11 +605,7 @@ def print_flags(flags_obj):
 
   selections = ['mlperf', 'tensorflow', 'absl', 'xla', 'tf2', 'main']
   for module in modules:
-    hit_selections = False
-    for selection in selections:
-      if selection in module:
-        hit_selections = True
-        break
+    hit_selections = any(selection in module for selection in selections)
     # if not hit_selections:
     #   continue
 
@@ -625,11 +620,8 @@ def get_flag_module(flags_obj, flag):
   flags_by_module = flags_obj.flags_by_module_dict()
   modules = sorted(flags_by_module)
 
-  for module in modules:
-    if flag in flags_by_module[module]:
-      return module
-
-  return None
+  return next(
+      (module for module in modules if flag in flags_by_module[module]), None)
 
 
 def get_num_train_iterations(flags_obj):
@@ -659,13 +651,8 @@ def get_num_train_iterations(flags_obj):
 
 def get_num_eval_steps(flags_obj):
   """Returns the number of eval steps."""
-  if flags_obj.drop_eval_remainder:
-    eval_steps = (
-        imagenet_preprocessing.NUM_IMAGES['validation'] // flags_obj.batch_size)
-  else:
-    eval_steps = (
-        math.ceil(1.0 * imagenet_preprocessing.NUM_IMAGES['validation'] /
-                  flags_obj.batch_size))
-
-  return eval_steps
+  return ((imagenet_preprocessing.NUM_IMAGES['validation'] //
+           flags_obj.batch_size) if flags_obj.drop_eval_remainder else
+          (math.ceil(1.0 * imagenet_preprocessing.NUM_IMAGES['validation'] /
+                     flags_obj.batch_size)))
 

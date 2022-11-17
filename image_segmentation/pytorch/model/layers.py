@@ -46,7 +46,12 @@ def conv_block_factory(in_channels, out_channels,
     mllog_event(key=constants.WEIGHTS_INITIALIZATION, sync=False, metadata=dict(tensor=name + suffix))
     normalization = _normalization(norm_type, out_channels)
     if norm_type == "instancenorm":
-        mllog_event(key=constants.WEIGHTS_INITIALIZATION, sync=False, metadata=dict(tensor=name + "_instancenorm"))
+        mllog_event(
+            key=constants.WEIGHTS_INITIALIZATION,
+            sync=False,
+            metadata=dict(tensor=f"{name}_instancenorm"),
+        )
+
     activation = _activation(activation)
 
     return nn.Sequential(conv, normalization, activation)
@@ -106,7 +111,11 @@ class OutputLayer(nn.Module):
     def __init__(self, in_channels, n_class):
         super(OutputLayer, self).__init__()
         self.conv = nn.Conv3d(in_channels, n_class, kernel_size=1, stride=1, padding=0, bias=True)
-        mllog_event(key=constants.WEIGHTS_INITIALIZATION, sync=False, metadata=dict(tensor=f"output_conv"))
+        mllog_event(
+            key=constants.WEIGHTS_INITIALIZATION,
+            sync=False,
+            metadata=dict(tensor="output_conv"),
+        )
 
     def forward(self, x):
         return self.conv(x)

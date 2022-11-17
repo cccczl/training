@@ -40,13 +40,13 @@ def launch_eval_job(tag, m1_path, m2_path, job_name, completions):
     """
     print()
     if not re.match(r'[a-z0-9-]*$', tag, re.I):
-        print("{} is not a valid tag".format(tag))
+        print(f"{tag} is not a valid tag")
         return
 
     # TODO: Change to minigo-pub
-    sgf_bucket_path = "sethtroisi-sandbox/experiments/eval/" + tag
+    sgf_bucket_path = f"sethtroisi-sandbox/experiments/eval/{tag}"
     assert not sgf_bucket_path.startswith("gs://"), bucket_pat
-    bucket_path = "gs://" + sgf_bucket_path
+    bucket_path = f"gs://{sgf_bucket_path}"
 
 
     metadata_path = os.path.join(bucket_path, 'metadata')

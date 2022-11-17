@@ -20,7 +20,7 @@ def get_optimizer(params, flags):
         optim = apex.optimizers.FusedLAMB(params, lr=flags.learning_rate, betas=flags.lamb_betas,
                                           weight_decay=flags.weight_decay)
     else:
-        raise ValueError("Optimizer {} unknown.".format(flags.optimizer))
+        raise ValueError(f"Optimizer {flags.optimizer} unknown.")
     return optim
 
 

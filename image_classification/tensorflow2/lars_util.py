@@ -88,11 +88,7 @@ class PolynomialDecayWithWarmup(
     if initial_learning_rate:
       self.initial_learning_rate = initial_learning_rate
 
-    if end_learning_rate:
-      self.end_learning_rate = end_learning_rate
-    else:
-      self.end_learning_rate = 0.0001
-
+    self.end_learning_rate = end_learning_rate or 0.0001
     if warmup_epochs is not None:
       warmup_epochs_ = warmup_epochs
     self.warmup_epochs = warmup_epochs_
@@ -100,23 +96,21 @@ class PolynomialDecayWithWarmup(
     opt_name = FLAGS.optimizer.lower()
     mlp_log.mlperf_print('opt_name', opt_name)
     if opt_name == 'lars':
-      mlp_log.mlperf_print('{}_epsilon'.format(opt_name), FLAGS.lars_epsilon)
-    mlp_log.mlperf_print('{}_opt_weight_decay'.format(opt_name),
-                         FLAGS.weight_decay)
-    mlp_log.mlperf_print('{}_opt_base_learning_rate'.format(opt_name),
+      mlp_log.mlperf_print(f'{opt_name}_epsilon', FLAGS.lars_epsilon)
+    mlp_log.mlperf_print(f'{opt_name}_opt_weight_decay', FLAGS.weight_decay)
+    mlp_log.mlperf_print(f'{opt_name}_opt_base_learning_rate',
                          self.initial_learning_rate)
-    mlp_log.mlperf_print('{}_opt_learning_rate_warmup_epochs'.format(opt_name),
+    mlp_log.mlperf_print(f'{opt_name}_opt_learning_rate_warmup_epochs',
                          warmup_epochs_)
-    mlp_log.mlperf_print('{}_opt_end_learning_rate'.format(opt_name),
+    mlp_log.mlperf_print(f'{opt_name}_opt_end_learning_rate',
                          self.end_learning_rate)
     warmup_steps = warmup_epochs_ * steps_per_epoch
     self.warmup_steps = tf.cast(warmup_steps, tf.float32)
     self.decay_steps = train_steps - warmup_steps + 1
-    mlp_log.mlperf_print('{}_opt_learning_rate_decay_steps'.format(opt_name),
+    mlp_log.mlperf_print(f'{opt_name}_opt_learning_rate_decay_steps',
                          int(self.decay_steps))
-    mlp_log.mlperf_print(
-        '{}_opt_learning_rate_decay_poly_power'.format(opt_name), 2.0)
-    mlp_log.mlperf_print('{}_opt_momentum'.format(opt_name), FLAGS.momentum)
+    mlp_log.mlperf_print(f'{opt_name}_opt_learning_rate_decay_poly_power', 2.0)
+    mlp_log.mlperf_print(f'{opt_name}_opt_momentum', FLAGS.momentum)
 
     self.poly_rate_scheduler = tf.keras.optimizers.schedules.PolynomialDecay(
         initial_learning_rate=self.initial_learning_rate,
@@ -154,9 +148,7 @@ class PolynomialDecayWithWarmup(
       poly_steps = math_ops.subtract(step, warmup_steps)
       poly_rate = self.poly_rate_scheduler(poly_steps)
 
-      decay_rate = tf.where(step <= warmup_steps,
-                            warmup_rate, poly_rate, name=name)
-      return decay_rate
+      return tf.where(step <= warmup_steps, warmup_rate, poly_rate, name=name)
 
   def get_config(self):
     return {

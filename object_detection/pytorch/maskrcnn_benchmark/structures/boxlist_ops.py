@@ -79,7 +79,9 @@ def boxlist_iou(boxlist1, boxlist2):
     """
     if boxlist1.size != boxlist2.size:
         raise RuntimeError(
-                "boxlists should have same image size, got {}, {}".format(boxlist1, boxlist2))
+            f"boxlists should have same image size, got {boxlist1}, {boxlist2}"
+        )
+
 
     N = len(boxlist1)
     M = len(boxlist2)
@@ -97,8 +99,7 @@ def boxlist_iou(boxlist1, boxlist2):
     wh = (rb - lt + TO_REMOVE).clamp(min=0)  # [N,M,2]
     inter = wh[:, :, 0] * wh[:, :, 1]  # [N,M]
 
-    iou = inter / (area1[:, None] + area2 - inter)
-    return iou
+    return inter / (area1[:, None] + area2 - inter)
 
 
 # TODO redundant, remove
@@ -107,9 +108,7 @@ def _cat(tensors, dim=0):
     Efficient version of torch.cat that avoids a copy if there is only a single element in a list
     """
     assert isinstance(tensors, (list, tuple))
-    if len(tensors) == 1:
-        return tensors[0]
-    return torch.cat(tensors, dim)
+    return tensors[0] if len(tensors) == 1 else torch.cat(tensors, dim)
 
 
 def cat_boxlist(bboxes):

@@ -85,7 +85,7 @@ def parse_dtype_info(flags):
   try:
     flags.dtype, default_loss_scale = DTYPE_MAP[flags.dtype]
   except KeyError:
-    raise ValueError("Invalid dtype: {}".format(flags.dtype))
+    raise ValueError(f"Invalid dtype: {flags.dtype}")
 
   flags.loss_scale = flags.loss_scale or default_loss_scale
 

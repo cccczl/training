@@ -180,7 +180,7 @@ def get_input_tensors(batch_size, feature_layout, tf_records, num_repeats=1,
 
     Returns a dict of tensors (see return value of batch_parse_tf_example)
     """
-    print("Reading tf_records from {} inputs".format(len(tf_records)))
+    print(f"Reading tf_records from {len(tf_records)} inputs")
     dataset = read_tf_records(
         batch_size,
         tf_records,
@@ -266,10 +266,10 @@ def make_dataset_from_selfplay(data_extracts):
         data_extracts: An iterable of (position, pi, result) tuples
     """
     f = dual_net.get_features()
-    tf_examples = (make_tf_example(features_lib.extract_features(pos, f),
-                                   pi, result)
-                   for pos, pi, result in data_extracts)
-    return tf_examples
+    return (
+        make_tf_example(features_lib.extract_features(pos, f), pi, result)
+        for pos, pi, result in data_extracts
+    )
 
 
 def make_dataset_from_sgf(sgf_filename, tf_record):

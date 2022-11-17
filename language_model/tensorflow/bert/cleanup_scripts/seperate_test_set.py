@@ -105,15 +105,15 @@ if __name__ == '__main__':
   logging.info('Processed %s (%d files) in %.2f sec',
                args.data, num_files, toc - tic)
 
-  output_filename = args.test_output + '.txt'
-  hash_filename = args.test_output + '.md5'
+  output_filename = f'{args.test_output}.txt'
+  hash_filename = f'{args.test_output}.md5'
   with io.open(output_filename, 'w', encoding='utf-8', newline='\n') as fout:
     with io.open(hash_filename, 'w', encoding='utf-8', newline='\n') as hashout:
       for f in test_articles_in_files:
         for article in f:
           fout.write(article)
           fout.write('\n\n')
-          
+
           article_hash = hashlib.md5(article.rstrip().encode('utf-8')).hexdigest()
           hashout.write(article_hash)
           hashout.write('\n')

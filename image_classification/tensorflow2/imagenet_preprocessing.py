@@ -110,11 +110,8 @@ def process_record_dataset(dataset,
     # Repeats the dataset for the number of epochs to train.
     dataset = dataset.repeat()
 
-  one_hot = False
   num_classes = FLAGS.num_classes
-  if FLAGS.label_smoothing and FLAGS.label_smoothing > 0:
-    one_hot = True
-
+  one_hot = bool(FLAGS.label_smoothing and FLAGS.label_smoothing > 0)
   logging.info('Num classes: %d', num_classes)
   logging.info('One hot: %s', one_hot)
   if is_training and FLAGS.cache_decoded_image:
@@ -207,10 +204,15 @@ def parse_example_proto(example_serialized):
   }
   sparse_float32 = tf.io.VarLenFeature(dtype=tf.float32)
   # Sparse features in Example proto.
-  feature_map.update(
-      {k: sparse_float32 for k in [
-          'image/object/bbox/xmin', 'image/object/bbox/ymin',
-          'image/object/bbox/xmax', 'image/object/bbox/ymax']})
+  feature_map |= {
+      k: sparse_float32
+      for k in [
+          'image/object/bbox/xmin',
+          'image/object/bbox/ymin',
+          'image/object/bbox/xmax',
+          'image/object/bbox/ymax',
+      ]
+  }
 
   features = tf.io.parse_single_example(serialized=example_serialized,
                                         features=feature_map)

@@ -73,7 +73,6 @@ def main():
                 print(key, eval_metrics[key])
     else:
         print("Invalid exec_mode.")
-        pass
 
 
 if __name__ == '__main__':

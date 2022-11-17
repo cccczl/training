@@ -29,7 +29,7 @@ class Compose(object):
         return image, target
 
     def __repr__(self):
-        format_string = self.__class__.__name__ + "("
+        format_string = f"{self.__class__.__name__}("
         for t in self.transforms:
             format_string += "\n"
             format_string += "    {0}".format(t)

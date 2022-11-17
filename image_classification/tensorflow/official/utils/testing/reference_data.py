@@ -183,7 +183,7 @@ class BaseTest(tf.test.TestCase):
 
       # These files are not needed for this test.
       os.remove(os.path.join(data_dir, "checkpoint"))
-      os.remove(os.path.join(data_dir, self.ckpt_prefix + ".meta"))
+      os.remove(os.path.join(data_dir, f"{self.ckpt_prefix}.meta"))
 
       # ops are evaluated even if there is no correctness function to ensure
       # that they can be evaluated.
@@ -236,12 +236,7 @@ class BaseTest(tf.test.TestCase):
 
     tf_version_comparison = ""
     if tf.GIT_VERSION != tf_git_version_reference:
-      tf_version_comparison = (
-          "Test was built using:     {} (git = {})\n"
-          "Local TensorFlow version: {} (git = {})"
-          .format(tf_version_reference, tf_git_version_reference,
-                  tf.VERSION, tf.GIT_VERSION)
-      )
+      tf_version_comparison = f"Test was built using:     {tf_version_reference} (git = {tf_git_version_reference})\nLocal TensorFlow version: {tf.VERSION} (git = {tf.GIT_VERSION})"
 
     with self.test_session(graph=graph) as sess:
       sess.run(init)
@@ -250,14 +245,12 @@ class BaseTest(tf.test.TestCase):
             data_dir, self.ckpt_prefix))
         if differences:
           tf.logging.warn(
-              "The provided graph is different than expected:\n  {}\n"
-              "However the weights were still able to be loaded.\n{}".format(
-                  differences, tf_version_comparison)
+              f"The provided graph is different than expected:\n  {differences}\nHowever the weights were still able to be loaded.\n{tf_version_comparison}"
           )
       except:  # pylint: disable=bare-except
         raise self.failureException(
-            "Weight load failed. Graph comparison:\n  {}{}"
-            .format(differences, tf_version_comparison))
+            f"Weight load failed. Graph comparison:\n  {differences}{tf_version_comparison}"
+        )
 
       eval_results = [op.eval() for op in ops_to_eval]
       if correctness_function is not None:
@@ -298,7 +291,7 @@ class BaseTest(tf.test.TestCase):
             correctness_function=correctness_function
         )
       except:
-        tf.logging.error("Failed unittest {}".format(name))
+        tf.logging.error(f"Failed unittest {name}")
         raise
     else:
       self._construct_and_save_reference_files(

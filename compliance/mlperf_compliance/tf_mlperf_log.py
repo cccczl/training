@@ -47,8 +47,8 @@ def log_deferred(op, log_id, every_n=1, first_n=None):
              The first_n refers to the first n that would have been logged.
   """
 
-  prefix = ":::MLPv0.5.0 [{}]".format(log_id)
-  if not first_n is not None and first_n == 1:
+  prefix = f":::MLPv0.5.0 [{log_id}]"
+  if first_n is None and first_n == 1:
     return tf.Print(op, [tf.timestamp(), op], message=prefix, first_n=1)
 
   counter = tf.Variable(tf.zeros(shape=(), dtype=tf.int32) - 1,
@@ -64,14 +64,14 @@ def log_deferred(op, log_id, every_n=1, first_n=None):
 
 def sum_metric(tensor, name):
   sum_var = tf.Variable(
-    initial_value=tf.zeros(shape=(), dtype=tensor.dtype),
-    trainable=False,
-    collections=[
-      tf.GraphKeys.LOCAL_VARIABLES,
-      tf.GraphKeys.METRIC_VARIABLES,
-    ],
-    name="{}_total".format(name),
-    aggregation=tf.VariableAggregation.SUM
+      initial_value=tf.zeros(shape=(), dtype=tensor.dtype),
+      trainable=False,
+      collections=[
+          tf.GraphKeys.LOCAL_VARIABLES,
+          tf.GraphKeys.METRIC_VARIABLES,
+      ],
+      name=f"{name}_total",
+      aggregation=tf.VariableAggregation.SUM,
   )
 
   update_op = tf.identity(tf.assign_add(sum_var, tensor))
@@ -79,8 +79,7 @@ def sum_metric(tensor, name):
 
 
 def _example():
-  for kwargs in [dict(first_n=1), dict(), dict(every_n=2),
-                 dict(first_n=2, every_n=2)]:
+  for kwargs in [dict(first_n=1), {}, dict(every_n=2), dict(first_n=2, every_n=2)]:
     op = tf.assign_add(tf.Variable(tf.zeros(shape=(), dtype=tf.int32) - 1), 1)
     op = log_deferred(op, str(uuid.uuid4()), **kwargs)
     init = [tf.local_variables_initializer(), tf.global_variables_initializer()]

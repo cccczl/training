@@ -148,13 +148,7 @@ def paste_mask_in_image(mask, box, im_h, im_w, thresh=0.5, padding=1):
     mask = F.interpolate(mask, size=(h, w), mode='bilinear', align_corners=False)
     mask = mask[0][0]
 
-    if thresh >= 0:
-        mask = mask > thresh
-    else:
-        # for visualization and debugging, we also
-        # allow it to return an unmodified mask
-        mask = (mask * 255).to(torch.uint8)
-
+    mask = mask > thresh if thresh >= 0 else (mask * 255).to(torch.uint8)
     im_mask = torch.zeros((im_h, im_w), dtype=torch.uint8)
     x_0 = max(box[0], 0)
     x_1 = min(box[2] + 1, im_w)
@@ -184,7 +178,7 @@ class Masker(object):
             paste_mask_in_image(mask[0], box, im_h, im_w, self.threshold, self.padding)
             for mask, box in zip(masks, boxes.bbox)
         ]
-        if len(res) > 0:
+        if res:
             res = torch.stack(res, dim=0)[:, None]
         else:
             res = masks.new_empty((0, 1, masks.shape[-2], masks.shape[-1]))
@@ -213,5 +207,4 @@ def make_roi_mask_post_processor(cfg):
         masker = Masker(threshold=mask_threshold, padding=1)
     else:
         masker = None
-    mask_post_processor = MaskPostProcessor(masker)
-    return mask_post_processor
+    return MaskPostProcessor(masker)

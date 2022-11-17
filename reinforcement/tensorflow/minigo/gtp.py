@@ -57,7 +57,7 @@ def make_gtp_instance(load_file, cgos_mode=False, kgs_mode=False,
     else:
         player = MCTSPlayer(network=n, two_player_mode=True)
 
-    name = "Minigo-" + os.path.basename(load_file)
+    name = f"Minigo-{os.path.basename(load_file)}"
     version = "0.2"
 
     engine = gtp_engine.Engine()

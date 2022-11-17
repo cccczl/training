@@ -22,12 +22,8 @@ def setup_environment():
     function allows the user to specify a Python source file that performs
     custom setup work that may be necessary to their computing environment.
     """
-    custom_module_path = os.environ.get("TORCH_DETECTRON_ENV_MODULE")
-    if custom_module_path:
+    if custom_module_path := os.environ.get("TORCH_DETECTRON_ENV_MODULE"):
         setup_custom_environment(custom_module_path)
-    else:
-        # The default setup is a no-op
-        pass
 
 
 def setup_custom_environment(custom_module_path):
@@ -37,12 +33,8 @@ def setup_custom_environment(custom_module_path):
     module = import_file("maskrcnn_benchmark.utils.env.custom_module", custom_module_path)
     assert hasattr(module, "setup_environment") and callable(
         module.setup_environment
-    ), (
-        "Custom environment module defined in {} does not have the "
-        "required callable attribute 'setup_environment'."
-    ).format(
-        custom_module_path
-    )
+    ), f"Custom environment module defined in {custom_module_path} does not have the required callable attribute 'setup_environment'."
+
     module.setup_environment()
 
 

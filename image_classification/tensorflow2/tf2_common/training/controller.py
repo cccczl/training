@@ -192,8 +192,7 @@ class Controller(object):
           lambda x: (x if isinstance(x, (float, bool)) else x.numpy()),
           eval_outputs)
 
-    info = "step: {}        evaluation metric: {}".format(
-        current_step, eval_outputs)
+    info = f"step: {current_step}        evaluation metric: {eval_outputs}"
     self._log_info(info)
 
     self.eval_summary_manager.write_summaries(eval_outputs)
@@ -319,8 +318,8 @@ class Controller(object):
 
     latest_checkpoint = self.checkpoint_manager.latest_checkpoint
     if not latest_checkpoint:
-      raise ValueError("no checkpoint found in dir %s" %
-                       self.checkpoint_manager.directory)
+      raise ValueError(
+          f"no checkpoint found in dir {self.checkpoint_manager.directory}")
     self._restore_model()
     self._evaluate_once(self.global_step.numpy())
 

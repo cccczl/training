@@ -30,8 +30,7 @@ def generate_seeds(rng, size):
     :param rng: random number generator
     :param size: length of the returned list
     """
-    seeds = [rng.randint(0, 2**32 - 1) for _ in range(size)]
-    return seeds
+    return [rng.randint(0, 2**32 - 1) for _ in range(size)]
 
 
 def broadcast_seeds(seeds, device):
@@ -98,10 +97,7 @@ def reduce_tensor(tensor, num_gpus):
     if num_gpus > 1:
         rt = tensor.clone()
         dist.all_reduce(rt, op=dist.reduce_op.SUM)
-        if rt.is_floating_point():
-            rt = rt / num_gpus
-        else:
-            rt = rt // num_gpus
+        rt = rt / num_gpus if rt.is_floating_point() else rt // num_gpus
         return rt
     return tensor
 
@@ -124,11 +120,12 @@ def get_rank():
     """
     Gets distributed rank or returns zero if distributed is not initialized.
     """
-    if torch.distributed.is_available() and torch.distributed.is_initialized():
-        rank = torch.distributed.get_rank()
-    else:
-        rank = 0
-    return rank
+    return (
+        torch.distributed.get_rank()
+        if torch.distributed.is_available()
+        and torch.distributed.is_initialized()
+        else 0
+    )
 
 
 def is_main_process():

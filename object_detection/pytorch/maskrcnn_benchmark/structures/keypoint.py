@@ -24,10 +24,9 @@ class Keypoints(object):
         # in my version this would consistently return a CPU tensor
         device = keypoints.device if isinstance(keypoints, torch.Tensor) else torch.device('cpu')
         keypoints = torch.as_tensor(keypoints, dtype=torch.float32, device=device)
-        num_keypoints = keypoints.shape[0]
-        if num_keypoints:
+        if num_keypoints := keypoints.shape[0]:
             keypoints = keypoints.view(num_keypoints, -1, 3)
-        
+
         # TODO should I split them?
         # self.visibility = keypoints[..., 2]
         self.keypoints = keypoints# [..., :2]
@@ -92,10 +91,10 @@ class Keypoints(object):
         return self.extra_fields[field]
 
     def __repr__(self):
-        s = self.__class__.__name__ + '('
-        s += 'num_instances={}, '.format(len(self.keypoints))
-        s += 'image_width={}, '.format(self.size[0])
-        s += 'image_height={})'.format(self.size[1])
+        s = f'{self.__class__.__name__}('
+        s += f'num_instances={len(self.keypoints)}, '
+        s += f'image_width={self.size[0]}, '
+        s += f'image_height={self.size[1]})'
         return s
 
 
@@ -142,7 +141,7 @@ class PersonKeypoints(Keypoints):
 # TODO this doesn't look great
 PersonKeypoints.FLIP_INDS = _create_flip_indices(PersonKeypoints.NAMES, PersonKeypoints.FLIP_MAP)
 def kp_connections(keypoints):
-    kp_lines = [
+    return [
         [keypoints.index('left_eye'), keypoints.index('right_eye')],
         [keypoints.index('left_eye'), keypoints.index('nose')],
         [keypoints.index('right_eye'), keypoints.index('nose')],
@@ -159,7 +158,6 @@ def kp_connections(keypoints):
         [keypoints.index('right_shoulder'), keypoints.index('left_shoulder')],
         [keypoints.index('right_hip'), keypoints.index('left_hip')],
     ]
-    return kp_lines
 PersonKeypoints.CONNECTIONS = kp_connections(PersonKeypoints.NAMES)
 
 
@@ -187,7 +185,7 @@ def keypoints_to_heat_map(keypoints, rois, heatmap_size):
     x = x.floor().long()
     y = (y - offset_y) * scale_y
     y = y.floor().long()
-    
+
     x[x_boundary_inds] = heatmap_size - 1
     y[y_boundary_inds] = heatmap_size - 1
 

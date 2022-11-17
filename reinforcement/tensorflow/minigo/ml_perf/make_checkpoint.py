@@ -56,7 +56,7 @@ def clean_checkpoint_dir():
     for sub_dir in ['data/selfplay', 'work_dir', 'flags']:
         path = os.path.join(FLAGS.checkpoint_dir, sub_dir)
         if tf.io.gfile.exists(path):
-            print('Removing {}'.format(path))
+            print(f'Removing {path}')
             tf.io.gfile.rmtree(path)
         if not FLAGS.checkpoint_dir.startswith('gs://'):
             tf.io.gfile.makedirs(path)
@@ -65,24 +65,24 @@ def clean_checkpoint_dir():
 def copy_training_checkpoint():
     dst_dir = os.path.join(FLAGS.checkpoint_dir, 'work_dir')
 
-    name = 'model.ckpt-{}'.format(FLAGS.ckpt)
+    name = f'model.ckpt-{FLAGS.ckpt}'
     checkpoint_path = os.path.join(dst_dir, 'checkpoint')
-    print('Writing {}'.format(checkpoint_path))
+    print(f'Writing {checkpoint_path}')
     with tf.io.gfile.GFile(checkpoint_path, 'w') as f:
-        f.write('model_checkpoint_path: "{}"\n'.format(name))
-        f.write('all_model_checkpoint_paths: "{}"\n'.format(name))
+        f.write(f'model_checkpoint_path: "{name}"\n')
+        f.write(f'all_model_checkpoint_paths: "{name}"\n')
 
     for ext in ['data-00000-of-00001', 'index', 'meta']:
-        basename = '{}.{}'.format(name, ext)
+        basename = f'{name}.{ext}'
         src_path = os.path.join(FLAGS.work_dir, basename)
         dst_path = os.path.join(dst_dir, basename)
-        print('Copying {} to {}'.format(src_path, dst_path))
+        print(f'Copying {src_path} to {dst_path}')
         tf.io.gfile.copy(src_path, dst_path)
 
 
 def find_model_num():
     # Get the modification date of one of the checkpoint files.
-    path = os.path.join(FLAGS.work_dir, 'model.ckpt-{}.meta'.format(FLAGS.ckpt))
+    path = os.path.join(FLAGS.work_dir, f'model.ckpt-{FLAGS.ckpt}.meta')
     checkpoint_mtime = tf.io.gfile.stat(path).mtime_nsec
 
     # Selfplay data is written under the following directory structure:
@@ -92,15 +92,13 @@ def find_model_num():
     time_str = time.strftime(
         '%Y-%m-%d-%H', time.localtime(checkpoint_mtime / 1000 / 1000 / 1000))
     pattern = os.path.join(FLAGS.selfplay_dir, '*', '*', time_str)
-    print(
-        'Looking for selfplay data directories that match "{}"'.format(pattern))
+    print(f'Looking for selfplay data directories that match "{pattern}"')
     paths = sorted(tf.io.gfile.glob(pattern))
     if not paths:
-        raise RuntimeError(
-            'Couldn\'t find selfplay data for checkpoint {}'.format(FLAGS.ckpt))
+        raise RuntimeError(f"Couldn\'t find selfplay data for checkpoint {FLAGS.ckpt}")
 
     # Extract the model numbers from the directories found.
-    models = sorted(set([os.path.normpath(x).split(os.sep)[-3] for x in paths]))
+    models = sorted({os.path.normpath(x).split(os.sep)[-3] for x in paths})
 
     model_num = int(models[-1])
     while model_num > 0:
@@ -109,8 +107,10 @@ def find_model_num():
             FLAGS.selfplay_dir, model_name, '*', '*', '*.tfrecord.zz')
         num_older = len([x for x in tf.io.gfile.glob(pattern)
                          if tf.io.gfile.stat(x).mtime_nsec < checkpoint_mtime])
-        print('Found {} games older than checkpoint {} for model {}'.format(
-              num_older, FLAGS.ckpt, model_name))
+        print(
+            f'Found {num_older} games older than checkpoint {FLAGS.ckpt} for model {model_name}'
+        )
+
         if num_older >= FLAGS.min_games_per_iteration:
             break
 
@@ -118,8 +118,9 @@ def find_model_num():
 
     if model_num == 0:
         raise RuntimeError(
-            'Couldn\'t a model with at least {} selfplay games older than '
-            'checkpoint {}'.format(FLAGS.min_games_per_iteration, FLAGS.ckpt))
+            f"Couldn\'t a model with at least {FLAGS.min_games_per_iteration} selfplay games older than checkpoint {FLAGS.ckpt}"
+        )
+
 
     return model_num
 

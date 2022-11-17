@@ -34,8 +34,7 @@ class TestChecks(unittest.TestCase):
   def test_add_result(self):
     """Tests adding result to metadata dict."""
     sub_check = checks.SubmissionChecks()
-    meta = {}
-    meta['entry_name'] = {}
+    meta = {'entry_name': {}}
     meta['entry_name']['result_name'] = {}
     sub_check._add_result(meta['entry_name']['result_name'],
                           1,
@@ -47,8 +46,7 @@ class TestChecks(unittest.TestCase):
 
   def test_sort_results(self):
     """tests sorting results."""
-    results_dict = []
-    results_dict.append(self._create_result_dict(23, 1.993))
+    results_dict = [self._create_result_dict(23, 1.993)]
     results_dict.append(self._create_result_dict(55, 19.993))
     results_dict.append(self._create_result_dict(1, 0.993))
     results_dict.append(self._create_result_dict(99, 999991.993))
@@ -58,7 +56,4 @@ class TestChecks(unittest.TestCase):
     self.assertEqual(sorted_results, [1, 23, 55, 99])
 
   def _create_result_dict(self, dt, start_time):
-    result = {}
-    result['dt'] = dt
-    result['start_time'] = start_time
-    return result
+    return {'dt': dt, 'start_time': start_time}

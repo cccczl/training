@@ -29,9 +29,9 @@ class SubmissionReport(object):
     # print summary
     print("\n" + "MLPERF SUBMISSION REPORT\n" + "========================\n")
     print("\n" + "SUMMARY\n" + "-------\n")
-    print("Passed checks: {}\n".format(len(self.passed_checks)) +
-          "Failed checks: {}\n".format(len(self.failed_checks)) +
-          "Errors: {}".format(len(self.errors)))
+    print(((f"Passed checks: {len(self.passed_checks)}\n" +
+            f"Failed checks: {len(self.failed_checks)}\n") +
+           f"Errors: {len(self.errors)}"))
     print("Note: the Errors indicate certain checks being skipped or " +
           "early terminated due to errors. The errors are likely caused " +
           "by failed checks above.")

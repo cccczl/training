@@ -481,10 +481,7 @@ def model_inference_fn(features, training, params):
         data_format=data_format)
 
     def mg_activation(inputs):
-        if FLAGS.use_swish:
-            return tf.nn.swish(inputs)
-
-        return tf.nn.relu(inputs)
+        return tf.nn.swish(inputs) if FLAGS.use_swish else tf.nn.relu(inputs)
 
     def residual_inner(inputs):
         conv_layer1 = mg_batchn(mg_conv2d(inputs))
@@ -581,7 +578,9 @@ def tpu_model_inference_fn(features):
     def custom_getter(getter, name, *args, **kwargs):
         with tf.control_dependencies(None):
             return tf.guarantee_const(
-                getter(name, *args, **kwargs), name=name + '/GuaranteeConst')
+                getter(name, *args, **kwargs), name=f'{name}/GuaranteeConst'
+            )
+
     with tf.variable_scope('', custom_getter=custom_getter):
         # TODO(tommadams): remove the tf.control_dependencies context manager
         # when a fixed version of TensorFlow is released.
@@ -604,10 +603,7 @@ def maybe_set_seed():
 
 
 def get_estimator():
-    if FLAGS.use_tpu:
-        return _get_tpu_estimator()
-    else:
-        return _get_nontpu_estimator()
+    return _get_tpu_estimator() if FLAGS.use_tpu else _get_nontpu_estimator()
 
 
 def _get_nontpu_estimator():
@@ -684,11 +680,11 @@ def export_model(model_path):
     estimator = tf.estimator.Estimator(model_fn, model_dir=FLAGS.work_dir,
                                        params=FLAGS.flag_values_dict())
     latest_checkpoint = estimator.latest_checkpoint()
-    all_checkpoint_files = tf.gfile.Glob(latest_checkpoint + '*')
+    all_checkpoint_files = tf.gfile.Glob(f'{latest_checkpoint}*')
     for filename in all_checkpoint_files:
         suffix = filename.partition(latest_checkpoint)[2]
         destination_path = model_path + suffix
-        print('Copying {} to {}'.format(filename, destination_path))
+        print(f'Copying {filename} to {destination_path}')
         tf.gfile.Copy(filename, destination_path)
 
 
@@ -714,7 +710,7 @@ def freeze_graph(model_path, use_trt=False, trt_max_batch_size=8,
         'use_trt': bool(use_trt),
     })
 
-    minigo_model.write_graph_def(out_graph, metadata, model_path + '.minigo')
+    minigo_model.write_graph_def(out_graph, metadata, f'{model_path}.minigo')
 
 
 def freeze_graph_tpu(model_path):
@@ -762,7 +758,7 @@ def freeze_graph_tpu(model_path):
         'num_replicas': FLAGS.num_tpu_cores,
     })
 
-    minigo_model.write_graph_def(out_graph, metadata, model_path + '.minigo')
+    minigo_model.write_graph_def(out_graph, metadata, f'{model_path}.minigo')
 
 
 def make_model_metadata(metadata):

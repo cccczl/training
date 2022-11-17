@@ -37,9 +37,10 @@ def project_masks_on_boxes(segmentation_masks, proposals, discretization_size):
     M = discretization_size
     device = proposals.bbox.device
     proposals = proposals.convert("xyxy")
-    assert segmentation_masks.size == proposals.size, "{}, {}".format(
-        segmentation_masks, proposals
-    )
+    assert (
+        segmentation_masks.size == proposals.size
+    ), f"{segmentation_masks}, {proposals}"
+
     # TODO put the proposals on the CPU, as the representation for the
     # masks is not efficient GPU-wise (possibly several small tensors for
     # representing a single instance mask)
@@ -52,9 +53,11 @@ def project_masks_on_boxes(segmentation_masks, proposals, discretization_size):
         scaled_mask = cropped_mask.resize((M, M))
         mask = scaled_mask.convert(mode="mask")
         masks.append(mask)
-    if len(masks) == 0:
-        return torch.empty(0, dtype=torch.float32, device=device)
-    return torch.stack(masks, dim=0).to(device, dtype=torch.float32)
+    return (
+        torch.stack(masks, dim=0).to(device, dtype=torch.float32)
+        if masks
+        else torch.empty(0, dtype=torch.float32, device=device)
+    )
 
 
 class MaskRCNNLossComputation(object):
@@ -137,10 +140,9 @@ class MaskRCNNLossComputation(object):
         if mask_targets.numel() == 0:
             return mask_logits.sum() * 0
 
-        mask_loss = F.binary_cross_entropy_with_logits(
+        return F.binary_cross_entropy_with_logits(
             mask_logits[positive_inds, labels_pos], mask_targets
         )
-        return mask_loss
 
 
 def make_roi_mask_loss_evaluator(cfg):
@@ -150,8 +152,4 @@ def make_roi_mask_loss_evaluator(cfg):
         allow_low_quality_matches=False,
     )
 
-    loss_evaluator = MaskRCNNLossComputation(
-        matcher, cfg.MODEL.ROI_MASK_HEAD.RESOLUTION
-    )
-
-    return loss_evaluator
+    return MaskRCNNLossComputation(matcher, cfg.MODEL.ROI_MASK_HEAD.RESOLUTION)

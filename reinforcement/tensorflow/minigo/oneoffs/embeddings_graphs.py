@@ -86,15 +86,13 @@ def main(argv):
 
     for i, (path, move) in enumerate(tqdm(metadata)):
         assert path.endswith('.sgf'), path
-        png = '{}_{}.png'.format(path[:-4], move)
+        png = f'{path[:-4]}_{move}.png'
         assert '/eval/' in png, png
         png = png.replace('/eval/', '/thumbnails/')
         if FLAGS.produce_pngs and not os.path.exists(png):
             # NOTE: sgftopng is a pain to install, sorry.
             with open(path) as sgf_file:
-                subprocess.run(
-                    ['sgftopng', png, '-' + str(move + 1)],
-                    stdin=sgf_file)
+                subprocess.run(['sgftopng', png, f'-{str(move + 1)}'], stdin=sgf_file)
         metadata[i] = (path, move, png)
 
     t4 = time.time()

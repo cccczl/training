@@ -98,7 +98,7 @@ class RetinaNetPostProcessor(RPNPostProcessor):
 
         results = []
         for per_box_cls, per_box_regression, per_pre_nms_top_n, \
-        per_candidate_inds, per_anchors in zip(
+            per_candidate_inds, per_anchors in zip(
             box_cls,
             box_regression,
             pre_nms_top_n,
@@ -112,12 +112,12 @@ class RetinaNetPostProcessor(RPNPostProcessor):
             # different in each image. Therefore, this part needs to be done
             # per image. 
             per_box_cls = per_box_cls[per_candidate_inds]
- 
+
             per_box_cls, top_k_indices = \
-                    per_box_cls.topk(per_pre_nms_top_n, sorted=False)
+                        per_box_cls.topk(per_pre_nms_top_n, sorted=False)
 
             per_candidate_nonzeros = \
-                    per_candidate_inds.nonzero()[top_k_indices, :]
+                        per_candidate_inds.nonzero()[top_k_indices, :]
 
             per_box_loc = per_candidate_nonzeros[:, 0]
             per_class = per_candidate_nonzeros[:, 1]
@@ -194,7 +194,7 @@ def make_retinanet_postprocessor(config, rpn_box_coder, is_train):
     fpn_post_nms_top_n = config.TEST.DETECTIONS_PER_IMG
     min_size = 0
 
-    box_selector = RetinaNetPostProcessor(
+    return RetinaNetPostProcessor(
         pre_nms_thresh=pre_nms_thresh,
         pre_nms_top_n=pre_nms_top_n,
         nms_thresh=nms_thresh,
@@ -203,5 +203,3 @@ def make_retinanet_postprocessor(config, rpn_box_coder, is_train):
         num_classes=config.MODEL.RETINANET.NUM_CLASSES,
         box_coder=rpn_box_coder,
     )
-
-    return box_selector

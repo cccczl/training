@@ -70,8 +70,8 @@ def training_series(cursor_r, cursor_c, mix, increment_fraction=0.05):
     # Now determine which increment will divide cursor_c into the same
     # number of intervals
     stride_c = math.ceil(cursor_c / intervals)
-    print('stride_c was {}, now {}'.format(mix.games_c * increment_fraction, stride_c))
-    print('stride_r: {}  stride_c: {}'.format(stride_r, stride_c))
+    print(f'stride_c was {mix.games_c * increment_fraction}, now {stride_c}')
+    print(f'stride_r: {stride_r}  stride_c: {stride_c}')
     for b_r, b_c in zip(range(0, cursor_r, stride_r), range(0, cursor_c, stride_c)):
         last_r, last_c = b_r + stride_r, b_c + stride_c
         yield (b_r, last_r, b_c, last_c)
@@ -81,7 +81,10 @@ def training_series(cursor_r, cursor_c, mix, increment_fraction=0.05):
 def _export_training_set(args):
     spec, start_r, start_c, mix, batch_size, output_url = args
     gq_r = bigtable_input.GameQueue(spec.project, spec.instance, spec.table)
-    gq_c = bigtable_input.GameQueue(spec.project, spec.instance, spec.table + '-nr')
+    gq_c = bigtable_input.GameQueue(
+        spec.project, spec.instance, f'{spec.table}-nr'
+    )
+
     total_moves = mix.moves_r + mix.moves_c
 
     with tf.Session() as sess:
@@ -95,9 +98,9 @@ def _export_training_set(args):
         writes = 0
         print('Writing to', output_url)
         with tf.io.TFRecordWriter(
-                output_url,
-                options=tf.io.TFRecordCompressionType.ZLIB) as wr:
-            log_filename = '/tmp/{}_{}.log'.format(start_r, start_c)
+                        output_url,
+                        options=tf.io.TFRecordCompressionType.ZLIB) as wr:
+            log_filename = f'/tmp/{start_r}_{start_c}.log'
             with open(log_filename, 'w') as progress_file:
                 with tqdm(desc='Records', unit_scale=2, total=total_moves,
                           file=progress_file) as pbar:
@@ -131,7 +134,10 @@ def main(argv):
         FLAGS.cbt_instance,
         FLAGS.cbt_table)
     gq_r = bigtable_input.GameQueue(spec.project, spec.instance, spec.table)
-    gq_c = bigtable_input.GameQueue(spec.project, spec.instance, spec.table + '-nr')
+    gq_c = bigtable_input.GameQueue(
+        spec.project, spec.instance, f'{spec.table}-nr'
+    )
+
 
     mix = bigtable_input.mix_by_decile(total_games, total_moves, 9)
     bounds = list(training_series(gq_r.latest_game_number,

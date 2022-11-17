@@ -56,7 +56,7 @@ def cache_url(url, model_dir=None, progress=True):
         filename = parts.path.replace("/", "_")
     cached_file = os.path.join(model_dir, filename)
     if not os.path.exists(cached_file) and is_main_process():
-        sys.stderr.write('Downloading: "{}" to {}\n'.format(url, cached_file))
+        sys.stderr.write(f'Downloading: "{url}" to {cached_file}\n')
         hash_prefix = HASH_REGEX.search(filename)
         if hash_prefix is not None:
             hash_prefix = hash_prefix.group(1)

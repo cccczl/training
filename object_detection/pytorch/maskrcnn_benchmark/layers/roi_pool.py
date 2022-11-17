@@ -69,8 +69,8 @@ class ROIPool(nn.Module):
         return roi_pool(input, rois, self.output_size, self.spatial_scale)
 
     def __repr__(self):
-        tmpstr = self.__class__.__name__ + "("
-        tmpstr += "output_size=" + str(self.output_size)
-        tmpstr += ", spatial_scale=" + str(self.spatial_scale)
+        tmpstr = f"{self.__class__.__name__}("
+        tmpstr += f"output_size={str(self.output_size)}"
+        tmpstr += f", spatial_scale={str(self.spatial_scale)}"
         tmpstr += ")"
         return tmpstr

@@ -8,7 +8,5 @@ def get_subdirs(parent_path):
     in the parent_path are excluded from the output.
     """
   entries = os.listdir(parent_path)
-  subdirs = [(entry, os.path.join(parent_path, entry))
-             for entry in entries
-             if os.path.isdir(entry)]
-  return subdirs
+  return [(entry, os.path.join(parent_path, entry)) for entry in entries
+          if os.path.isdir(entry)]

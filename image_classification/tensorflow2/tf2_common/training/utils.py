@@ -273,10 +273,10 @@ class IntervalTrigger(Trigger):
       self._last_trigger_value = value
       return True
 
-    if self._interval and self._interval > 0:
-      if value >= self._last_trigger_value + self._interval:
-        self._last_trigger_value = value
-        return True
+    if (self._interval and self._interval > 0
+        and value >= self._last_trigger_value + self._interval):
+      self._last_trigger_value = value
+      return True
     return False
 
   def reset(self):

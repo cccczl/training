@@ -165,7 +165,7 @@ def add_model(argv):
     for status in response:
         print ("Status:", status.code, status)
         if status.code is not 0:
-            print("Failed to write {}".format(i, status))
+            print(f"Failed to write {i}")
 
 
 if __name__ == '__main__':

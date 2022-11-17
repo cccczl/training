@@ -54,7 +54,7 @@ class MaskRCNNFPNFeatureExtractor(nn.Module):
         next_feature = input_size
         self.blocks = []
         for layer_idx, layer_features in enumerate(layers, 1):
-            layer_name = "mask_fcn{}".format(layer_idx)
+            layer_name = f"mask_fcn{layer_idx}"
             module = make_conv3x3(next_feature, layer_features, 
                 dilation=dilation, stride=1, use_gn=use_gn
             )

@@ -27,7 +27,7 @@ def translate_gtp_color(gtp_color):
         return go.BLACK
     if gtp_color.lower() in ["w", "white"]:
         return go.WHITE
-    raise ValueError("invalid color {}".format(gtp_color))
+    raise ValueError(f"invalid color {gtp_color}")
 
 
 class BasicCmdHandler(object):
@@ -41,7 +41,7 @@ class BasicCmdHandler(object):
 
     def cmd_boardsize(self, n: int):
         if n != go.N:
-            raise ValueError("unsupported board size: {}".format(n))
+            raise ValueError(f"unsupported board size: {n}")
 
     def cmd_clear_board(self):
         position = self._player.get_position()
@@ -62,12 +62,7 @@ class BasicCmdHandler(object):
         self._player.get_position().komi = komi
 
     def cmd_play(self, arg0: str, arg1=None):
-        if arg1 is None:
-            move = arg0
-        else:
-            # let's assume this never happens for now.
-            # self._accomodate_out_of_turn(translate_gtp_color(arg0))
-            move = arg1
+        move = arg0 if arg1 is None else arg1
         return self._player.play_move(coords.from_gtp(move))
 
     def cmd_genmove(self, color=None):
@@ -148,7 +143,7 @@ class RegressionsCmdHandler(object):
             with open(filename, 'r') as f:
                 contents = f.read()
         except:
-            raise ValueError("Unreadable file: " + filename)
+            raise ValueError(f"Unreadable file: {filename}")
 
         # Clear the board before replaying sgf
         # TODO: should this use the sgfs komi?
@@ -188,8 +183,8 @@ class GoGuiCmdHandler(object):
         return self._heatmap(sort_order, root, 'child_N')
 
     def cmd_spin(self):
-        for i in range(50):
-            for j in range(100):
+        for _ in range(50):
+            for _ in range(100):
                 self._player.tree_search()
             moves = self.cmd_nextplay().lower()
             moves = moves.split()
@@ -287,15 +282,14 @@ class MiniguiBasicCmdHandler(BasicCmdHandler):
         position = root.position
 
         board = []
-        for row in range(go.N):
-            for col in range(go.N):
-                stone = position.board[row, col]
-                if stone == go.BLACK:
-                    board.append("X")
-                elif stone == go.WHITE:
-                    board.append("O")
-                else:
-                    board.append(".")
+        for row, col in itertools.product(range(go.N), range(go.N)):
+            stone = position.board[row, col]
+            if stone == go.BLACK:
+                board.append("X")
+            elif stone == go.WHITE:
+                board.append("O")
+            else:
+                board.append(".")
 
         msg = {
             "id": hex(id(root)),
@@ -329,10 +323,10 @@ class MiniguiBasicCmdHandler(BasicCmdHandler):
             "id": hex(id(root)),
             "n": int(root.N),
             "q": float(root.Q),
+            "childQ": [int(round(q * 1000)) for q in root.child_Q],
+            "childN": [int(n) for n in root.child_N],
         }
 
-        msg["childQ"] = [int(round(q * 1000)) for q in root.child_Q]
-        msg["childN"] = [int(n) for n in root.child_N]
 
         ranked_children = root.rank_children()
         variations = {}

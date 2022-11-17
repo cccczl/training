@@ -39,31 +39,36 @@ class RetinaNetHead(torch.nn.Module):
         num_classes = cfg.MODEL.RETINANET.NUM_CLASSES - 1
         in_channels = cfg.MODEL.BACKBONE.OUT_CHANNELS
         num_anchors = len(cfg.MODEL.RETINANET.ASPECT_RATIOS) \
-                        * cfg.MODEL.RETINANET.SCALES_PER_OCTAVE
+                            * cfg.MODEL.RETINANET.SCALES_PER_OCTAVE
 
         cls_tower = []
         bbox_tower = []
-        for i in range(cfg.MODEL.RETINANET.NUM_CONVS):
-            cls_tower.append(
-                nn.Conv2d(
-                    in_channels,
-                    in_channels,
-                    kernel_size=3,
-                    stride=1,
-                    padding=1
+        for _ in range(cfg.MODEL.RETINANET.NUM_CONVS):
+            cls_tower.extend(
+                (
+                    nn.Conv2d(
+                        in_channels,
+                        in_channels,
+                        kernel_size=3,
+                        stride=1,
+                        padding=1,
+                    ),
+                    nn.ReLU(),
                 )
             )
-            cls_tower.append(nn.ReLU())
-            bbox_tower.append(
-                nn.Conv2d(
-                    in_channels,
-                    in_channels,
-                    kernel_size=3,
-                    stride=1,
-                    padding=1
+
+            bbox_tower.extend(
+                (
+                    nn.Conv2d(
+                        in_channels,
+                        in_channels,
+                        kernel_size=3,
+                        stride=1,
+                        padding=1,
+                    ),
+                    nn.ReLU(),
                 )
             )
-            bbox_tower.append(nn.ReLU())
 
         self.add_module('cls_tower', nn.Sequential(*cls_tower))
         self.add_module('bbox_tower', nn.Sequential(*bbox_tower))
@@ -140,7 +145,7 @@ class RetinaNetModule(torch.nn.Module):
         """
         box_cls, box_regression = self.head(features)
         anchors = self.anchor_generator(images, features)
- 
+
         if self.training:
             return self._forward_train(anchors, box_cls, box_regression, targets)
         else:

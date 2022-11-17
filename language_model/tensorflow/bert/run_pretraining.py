@@ -128,7 +128,7 @@ def model_fn_builder(bert_config, init_checkpoint, learning_rate,
 
     tf.logging.info("*** Features ***")
     for name in sorted(features.keys()):
-      tf.logging.info("  name = %s, shape = %s" % (name, features[name].shape))
+      tf.logging.info(f"  name = {name}, shape = {features[name].shape}")
 
     input_ids = features["input_ids"]
     input_mask = features["input_mask"]
@@ -266,7 +266,7 @@ def model_fn_builder(bert_config, init_checkpoint, learning_rate,
               next_sentence_log_probs, next_sentence_labels))
 
     else:
-      raise ValueError("Only TRAIN and EVAL modes are supported: %s" % (mode))
+      raise ValueError(f"Only TRAIN and EVAL modes are supported: {mode}")
 
     return output_spec
 
@@ -353,8 +353,7 @@ def gather_indexes(sequence_tensor, positions):
   flat_positions = tf.reshape(positions + flat_offsets, [-1])
   flat_sequence_tensor = tf.reshape(sequence_tensor,
                                     [batch_size * seq_length, width])
-  output_tensor = tf.gather(flat_sequence_tensor, flat_positions)
-  return output_tensor
+  return tf.gather(flat_sequence_tensor, flat_positions)
 
 
 def input_fn_builder(input_files,
@@ -492,7 +491,7 @@ def main(_):
 
   tf.logging.info("*** Input Files ***")
   for input_file in input_files:
-    tf.logging.info("  %s" % input_file)
+    tf.logging.info(f"  {input_file}")
 
   tpu_cluster_resolver = None
   if FLAGS.use_tpu and FLAGS.tpu_name:

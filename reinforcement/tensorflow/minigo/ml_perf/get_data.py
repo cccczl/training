@@ -43,9 +43,13 @@ FLAGS = flags.FLAGS
 
 
 def freeze_graph(path):
-  utils.wait(utils.checked_run(
-      'python', 'freeze_graph.py',
-      '--model_path={}'.format(path), '--use_tpu={}'.format(FLAGS.use_tpu)))
+  utils.wait(
+      utils.checked_run(
+          'python',
+          'freeze_graph.py',
+          f'--model_path={path}',
+          f'--use_tpu={FLAGS.use_tpu}',
+      ))
 
 
 def main(unused_argv):

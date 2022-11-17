@@ -83,7 +83,7 @@ def mlperf_test_early_exit(iteration, iters_per_epoch, tester, model, distribute
         model.train()
 
         logger = logging.getLogger('maskrcnn_benchmark.trainer')
-        logger.info('bbox mAP: {}, segm mAP: {}'.format(bbox_map, segm_map))
+        logger.info(f'bbox mAP: {bbox_map}, segm mAP: {segm_map}')
 
         log_event(key=constants.EVAL_ACCURACY, value={"BBOX" : bbox_map, "SEGM" : segm_map}, metadata={"epoch_num" : epoch} )
         log_end(key=constants.EVAL_STOP, metadata={"epoch_num": epoch})
@@ -144,19 +144,15 @@ def train(cfg, local_rank, distributed, disable_allreduce_for_logging, random_nu
             broadcast_buffers=False,
         )
 
-    arguments = {}
-    arguments["iteration"] = 0
-
     output_dir = cfg.OUTPUT_DIR
 
     save_to_disk = get_rank() == 0
     checkpointer = DetectronCheckpointer(
         cfg, model, optimizer, scheduler, output_dir, save_to_disk
     )
-    arguments["save_checkpoints"] = cfg.SAVE_CHECKPOINTS
-
+    arguments = {"iteration": 0, "save_checkpoints": cfg.SAVE_CHECKPOINTS}
     extra_checkpoint_data = checkpointer.load(cfg.MODEL.WEIGHT)
-    arguments.update(extra_checkpoint_data)
+    arguments |= extra_checkpoint_data
 
     log_end(key=constants.INIT_STOP)
     log_start(key=constants.RUN_START)
@@ -271,7 +267,7 @@ def main():
         mkdir(output_dir)
 
     logger = setup_logger("maskrcnn_benchmark", output_dir, get_rank())
-    logger.info("Using {} GPUs".format(num_gpus))
+    logger.info(f"Using {num_gpus} GPUs")
     logger.info(args)
 
     # generate worker seeds, one seed for every distributed worker
@@ -282,18 +278,21 @@ def main():
     worker_seeds = broadcast_seeds(worker_seeds, device='cuda')
 
     # Setting worker seeds
-    logger.info("Worker {}: Setting seed {}".format(args.local_rank, worker_seeds[args.local_rank]))
+    logger.info(
+        f"Worker {args.local_rank}: Setting seed {worker_seeds[args.local_rank]}"
+    )
+
     torch.manual_seed(worker_seeds[args.local_rank])
 
 
     logger.info("Collecting env info (might take some time)")
     logger.info("\n" + collect_env_info())
 
-    logger.info("Loaded configuration file {}".format(args.config_file))
+    logger.info(f"Loaded configuration file {args.config_file}")
     with open(args.config_file, "r") as cf:
         config_str = "\n" + cf.read()
         logger.info(config_str)
-    logger.info("Running with config:\n{}".format(cfg))
+    logger.info(f"Running with config:\n{cfg}")
 
     model, success = train(cfg, args.local_rank, args.distributed, args.disable_allreduce_for_logging, random_number_generator)
 

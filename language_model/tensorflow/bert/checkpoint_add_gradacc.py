@@ -31,8 +31,9 @@ def main(unused_argv):
           tf.get_variable(n, shapes[n], dtypes[n]),
           np.array(reader.get_tensor(n)))
       tf.keras.backend.set_value(
-          tf.get_variable(n + "/GradientAccumulator", shapes[n], dtypes[n]),
-          np.zeros(shapes[n]))
+          tf.get_variable(f"{n}/GradientAccumulator", shapes[n], dtypes[n]),
+          np.zeros(shapes[n]),
+      )
     tf.train.Saver().save(sess, FLAGS.new)
 
 

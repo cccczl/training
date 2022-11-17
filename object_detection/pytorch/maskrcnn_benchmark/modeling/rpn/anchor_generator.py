@@ -64,10 +64,7 @@ class AnchorGenerator(nn.Module):
             cell_anchors = [
                 generate_anchors(anchor_stride, sizes, aspect_ratios).float()
             ]
-        else:
-            if len(anchor_strides) != len(sizes):
-                raise RuntimeError("FPN should have #anchor_strides == #sizes")
-
+        elif len(anchor_strides) == len(sizes):
             cell_anchors = [
                 generate_anchors(
                     anchor_stride,
@@ -76,6 +73,9 @@ class AnchorGenerator(nn.Module):
                 ).float()
                 for anchor_stride, size in zip(anchor_strides, sizes)
             ]
+        else:
+            raise RuntimeError("FPN should have #anchor_strides == #sizes")
+
         self.strides = anchor_strides
         self.cell_anchors = BufferList(cell_anchors)
         self.straddle_thresh = straddle_thresh
@@ -126,7 +126,7 @@ class AnchorGenerator(nn.Module):
         grid_sizes = [feature_map.shape[-2:] for feature_map in feature_maps]
         anchors_over_all_feature_maps = self.grid_anchors(grid_sizes)
         anchors = []
-        for i, (image_height, image_width) in enumerate(image_list.image_sizes):
+        for image_height, image_width in image_list.image_sizes:
             anchors_in_image = []
             for anchors_per_feature_map in anchors_over_all_feature_maps:
                 boxlist = BoxList(
@@ -150,10 +150,9 @@ def make_anchor_generator(config):
         ), "FPN should have len(ANCHOR_STRIDE) == len(ANCHOR_SIZES)"
     else:
         assert len(anchor_stride) == 1, "Non-FPN should have a single ANCHOR_STRIDE"
-    anchor_generator = AnchorGenerator(
+    return AnchorGenerator(
         anchor_sizes, aspect_ratios, anchor_stride, straddle_thresh
     )
-    return anchor_generator
 
 
 def make_anchor_generator_retinanet(config):
@@ -173,10 +172,9 @@ def make_anchor_generator_retinanet(config):
             per_layer_anchor_sizes.append(octave_scale * size)
         new_anchor_sizes.append(tuple(per_layer_anchor_sizes))
 
-    anchor_generator = AnchorGenerator(
+    return AnchorGenerator(
         tuple(new_anchor_sizes), aspect_ratios, anchor_strides, straddle_thresh
     )
-    return anchor_generator
 
 # Copyright (c) 2017-present, Facebook, Inc.
 #
@@ -271,7 +269,7 @@ def _mkanchors(ws, hs, x_ctr, y_ctr):
     """
     ws = ws[:, np.newaxis]
     hs = hs[:, np.newaxis]
-    anchors = np.hstack(
+    return np.hstack(
         (
             x_ctr - 0.5 * (ws - 1),
             y_ctr - 0.5 * (hs - 1),
@@ -279,7 +277,6 @@ def _mkanchors(ws, hs, x_ctr, y_ctr):
             y_ctr + 0.5 * (hs - 1),
         )
     )
-    return anchors
 
 
 def _ratio_enum(anchor, ratios):
@@ -289,8 +286,7 @@ def _ratio_enum(anchor, ratios):
     size_ratios = size / ratios
     ws = np.round(np.sqrt(size_ratios))
     hs = np.round(ws * ratios)
-    anchors = _mkanchors(ws, hs, x_ctr, y_ctr)
-    return anchors
+    return _mkanchors(ws, hs, x_ctr, y_ctr)
 
 
 def _scale_enum(anchor, scales):
@@ -298,5 +294,4 @@ def _scale_enum(anchor, scales):
     w, h, x_ctr, y_ctr = _whctrs(anchor)
     ws = w * scales
     hs = h * scales
-    anchors = _mkanchors(ws, hs, x_ctr, y_ctr)
-    return anchors
+    return _mkanchors(ws, hs, x_ctr, y_ctr)

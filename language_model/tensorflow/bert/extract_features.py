@@ -153,7 +153,7 @@ def model_fn_builder(bert_config, init_checkpoint, layer_indexes, use_tpu,
         use_one_hot_embeddings=use_one_hot_embeddings)
 
     if mode != tf.estimator.ModeKeys.PREDICT:
-      raise ValueError("Only PREDICT modes are supported: %s" % (mode))
+      raise ValueError(f"Only PREDICT modes are supported: {mode}")
 
     tvars = tf.trainable_variables()
     scaffold_fn = None
@@ -210,33 +210,11 @@ def convert_examples_to_features(examples, seq_length, tokenizer):
       # length is less than the specified length.
       # Account for [CLS], [SEP], [SEP] with "- 3"
       _truncate_seq_pair(tokens_a, tokens_b, seq_length - 3)
-    else:
-      # Account for [CLS] and [SEP] with "- 2"
-      if len(tokens_a) > seq_length - 2:
-        tokens_a = tokens_a[0:(seq_length - 2)]
+    elif len(tokens_a) > seq_length - 2:
+      tokens_a = tokens_a[:seq_length - 2]
 
-    # The convention in BERT is:
-    # (a) For sequence pairs:
-    #  tokens:   [CLS] is this jack ##son ##ville ? [SEP] no it is not . [SEP]
-    #  type_ids: 0     0  0    0    0     0       0 0     1  1  1  1   1 1
-    # (b) For single sequences:
-    #  tokens:   [CLS] the dog is hairy . [SEP]
-    #  type_ids: 0     0   0   0  0     0 0
-    #
-    # Where "type_ids" are used to indicate whether this is the first
-    # sequence or the second sequence. The embedding vectors for `type=0` and
-    # `type=1` were learned during pre-training and are added to the wordpiece
-    # embedding vector (and position vector). This is not *strictly* necessary
-    # since the [SEP] token unambiguously separates the sequences, but it makes
-    # it easier for the model to learn the concept of sequences.
-    #
-    # For classification tasks, the first vector (corresponding to [CLS]) is
-    # used as as the "sentence vector". Note that this only makes sense because
-    # the entire model is fine-tuned.
-    tokens = []
-    input_type_ids = []
-    tokens.append("[CLS]")
-    input_type_ids.append(0)
+    tokens = ["[CLS]"]
+    input_type_ids = [0]
     for token in tokens_a:
       tokens.append(token)
       input_type_ids.append(0)
@@ -268,13 +246,14 @@ def convert_examples_to_features(examples, seq_length, tokenizer):
 
     if ex_index < 5:
       tf.logging.info("*** Example ***")
-      tf.logging.info("unique_id: %s" % (example.unique_id))
-      tf.logging.info("tokens: %s" % " ".join(
-          [tokenization.printable_text(x) for x in tokens]))
-      tf.logging.info("input_ids: %s" % " ".join([str(x) for x in input_ids]))
-      tf.logging.info("input_mask: %s" % " ".join([str(x) for x in input_mask]))
+      tf.logging.info(f"unique_id: {example.unique_id}")
       tf.logging.info(
-          "input_type_ids: %s" % " ".join([str(x) for x in input_type_ids]))
+          f'tokens: {" ".join([tokenization.printable_text(x) for x in tokens])}'
+      )
+      tf.logging.info(f'input_ids: {" ".join([str(x) for x in input_ids])}')
+      tf.logging.info(f'input_mask: {" ".join([str(x) for x in input_mask])}')
+      tf.logging.info(
+          f'input_type_ids: {" ".join([str(x) for x in input_type_ids])}')
 
     features.append(
         InputFeatures(
@@ -319,8 +298,8 @@ def read_examples(input_file):
       if m is None:
         text_a = line
       else:
-        text_a = m.group(1)
-        text_b = m.group(2)
+        text_a = m[1]
+        text_b = m[2]
       examples.append(
           InputExample(unique_id=unique_id, text_a=text_a, text_b=text_b))
       unique_id += 1
@@ -349,10 +328,7 @@ def main(_):
   features = convert_examples_to_features(
       examples=examples, seq_length=FLAGS.max_seq_length, tokenizer=tokenizer)
 
-  unique_id_to_feature = {}
-  for feature in features:
-    unique_id_to_feature[feature.unique_id] = feature
-
+  unique_id_to_feature = {feature.unique_id: feature for feature in features}
   model_fn = model_fn_builder(
       bert_config=bert_config,
       init_checkpoint=FLAGS.init_checkpoint,

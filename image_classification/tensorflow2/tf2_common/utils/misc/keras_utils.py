@@ -37,8 +37,7 @@ class BatchTimestamp(object):
     self.timestamp = timestamp
 
   def __repr__(self):
-    return "'BatchTimestamp<batch_index: {}, timestamp: {}>'".format(
-        self.batch_index, self.timestamp)
+    return f"'BatchTimestamp<batch_index: {self.batch_index}, timestamp: {self.timestamp}>'"
 
 
 class TimeHistory(tf.keras.callbacks.Callback):
@@ -62,11 +61,7 @@ class TimeHistory(tf.keras.callbacks.Callback):
     self.steps_in_epoch = 0
     self.start_time = None
 
-    if logdir:
-      self.summary_writer = tf.summary.create_file_writer(logdir)
-    else:
-      self.summary_writer = None
-
+    self.summary_writer = tf.summary.create_file_writer(logdir) if logdir else None
     # Logs start of step 1 then end of each step based on log_steps interval.
     self.timestamp_log = []
 

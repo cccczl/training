@@ -35,9 +35,9 @@ def verify_submission(args):
     try:
       crypto.decrypt_submission(private_key, root_dir, decrypt_out)
     except Exception as e:
-      print("Unable to decrypt submission: {}".format(str(e)))
+      print(f"Unable to decrypt submission: {str(e)}")
       sys.exit(1)
-    print("Decrypted submission saved at {}".format(decrypt_out))
+    print(f"Decrypted submission saved at {decrypt_out}")
     root_dir = decrypt_out
 
   # perform verifications and extract results
@@ -55,9 +55,9 @@ def verify_submission(args):
     try:
       crypto.encrypt_submission(public_key, root_dir, encrypt_out)
     except Exception as e:
-      print("Unable to encrypt submission: {}".format(str(e)))
+      print(f"Unable to encrypt submission: {str(e)}")
       sys.exit(1)
-    print("Encrypted submission saved at {}".format(encrypt_out))
+    print(f"Encrypted submission saved at {encrypt_out}")
 
 
 def main():

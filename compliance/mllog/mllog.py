@@ -52,7 +52,7 @@ def get_caller(stack_index=2, root_dir=None):
   # Trim the filenames for readability.
   filename = caller.filename
   if root_dir is not None:
-    filename = re.sub('^' + root_dir + '/', '', filename)
+    filename = re.sub(f'^{root_dir}/', '', filename)
   return {"file": filename, "lineno": caller.lineno}
 
 
@@ -197,17 +197,19 @@ class MLLogger(object):
       clear_line = self.default_clear_line
 
     log_metadata = {}
-    log_metadata.update(get_caller(2 + stack_offset, root_dir=self.root_dir))
+    log_metadata |= get_caller(2 + stack_offset, root_dir=self.root_dir)
     if metadata:
       if not isinstance(metadata, dict):
         self._do_log(logging.WARNING, "Metadata is not dictionary, ignored.",
                      clear_line=True)
       else:
-        overlap_keys = set(log_metadata.keys()).intersection(metadata.keys())
-        if overlap_keys:
-          self._do_log(logging.WARNING,
-              "Metadata fields overridden: {}".format(", ".join(overlap_keys)),
-              clear_line=True)
+        if overlap_keys := set(log_metadata.keys()).intersection(
+            metadata.keys()):
+          self._do_log(
+              logging.WARNING,
+              f'Metadata fields overridden: {", ".join(overlap_keys)}',
+              clear_line=True,
+          )
         log_metadata.update(metadata)
 
     log_line = _encode_log(

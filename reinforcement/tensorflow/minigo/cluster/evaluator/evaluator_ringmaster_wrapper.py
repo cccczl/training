@@ -28,6 +28,7 @@ This script is responsible for:
 5. upload games, log, report to GCS
 """
 
+
 import sys
 sys.path.insert(0, "..")
 
@@ -46,10 +47,10 @@ from bigtable_input import METADATA
 
 
 CTL_NAME = "ringmaster_evals"
-CTL_FILENAME = CTL_NAME + ".ctl"
-CTL_GAME_DIR = CTL_NAME + ".games"
-CTL_LOG = CTL_NAME + ".log"
-CTL_REPORT = CTL_NAME + ".report"
+CTL_FILENAME = f"{CTL_NAME}.ctl"
+CTL_GAME_DIR = f"{CTL_NAME}.games"
+CTL_LOG = f"{CTL_NAME}.log"
+CTL_REPORT = f"{CTL_NAME}.report"
 
 MODEL_ROW_FMT = "m_eval_{}"
 
@@ -157,7 +158,7 @@ def record_results(bt_table, sgf_base, num_games, start_time):
     all_good = True
     for i, status in enumerate(response):
         if status.code is not 0:
-            print("Row number {} failed to write {}".format(i, status))
+            print(f"Row number {i} failed to write {status}")
             all_good = False
 
     return all_good
@@ -221,8 +222,8 @@ if __name__ == "__main__":
     success = call_ringmaster(num_games)
     assert success
 
-    SGF_BASE = "gs://{}/eval_server/games/{}_vs_{}/{}/".format(
-        ENV["SGF_BUCKET_NAME"], m_a_name, m_b_name, start_time)
+    SGF_BASE = f'gs://{ENV["SGF_BUCKET_NAME"]}/eval_server/games/{m_a_name}_vs_{m_b_name}/{start_time}/'
+
     print("Saving to", SGF_BASE)
     success = record_results(bt_table, SGF_BASE,
         num_games, start_time=start_time)
